@@ -1,0 +1,80 @@
+const express = require('express');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const cookieParser = require('cookie-parser');
+const rateLimit = require('express-rate-limit');
+const User = require('./models/authModel');
+
+const cors = require('cors');
+require('dotenv').config();
+
+const app = express();
+app.use(express.json());
+app.use(cookieParser());
+app.use(passport.initialize());
+
+
+const corsOptions = {
+    origin: ["http://localhost:3000",], // Allowed frontend origins
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"], // Allowed HTTP methods
+    allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
+    credentials: true, // Allow cookies and authorization headers
+};
+
+app.use(cors(corsOptions));
+
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: 'http://localhost:5000/auth/google/callback',
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        const googleId = profile.id;
+        const email = profile.emails[0].value;
+        const firstName = profile.name.givenName;
+        const lastName = profile.name.familyName;
+        const profilePictureUrl = profile.photos[0].value;
+
+        let user = await User.findByGoogleIdOrIdentifier(googleId);
+        if (user) return done(null, user);
+
+        user = await User.createGoogleUser(googleId, email, firstName, lastName, profilePictureUrl);
+        return done(null, user);
+      } catch (err) {
+        return done(err);
+      }
+    }
+  )
+);
+
+  // app.use(
+  //   '/auth',
+  //   rateLimit({
+  //     windowMs: 15 * 60 * 1000, // 15 minutes
+  //     max: 100,
+  //   })
+  // );
+
+const authRoutes = require('./routes/auth');
+app.use('/auth', authRoutes);
+
+const roleRoutes = require('./routes/roleRoutes');
+app.use('/roles', roleRoutes);
+
+const categoryRoutes = require('./routes/categoryRoutes');
+const productRoutes = require('./routes/productRoutes');
+app.use('/categories', categoryRoutes);
+app.use('/products', productRoutes);
+
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong!' });
+});
+
+app.listen(5000, () => console.log('Backend running on http://localhost:5000'));
+
+
