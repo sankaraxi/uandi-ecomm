@@ -7,17 +7,17 @@ import { fetchProducts, deleteProduct, updateStock } from '@/store/productsSlice
 import { fetchCategories } from '@/store/categoriesSlice';
 import Link from 'next/link';
 import Swal from 'sweetalert2';
-import { 
-  PencilIcon, 
-  TrashIcon, 
-  EyeIcon, 
+import {
   PlusIcon,
   MagnifyingGlassIcon,
-  FunnelIcon 
+  FunnelIcon,
+  ChevronDownIcon
 } from '@heroicons/react/24/outline';
 import ProductPreviewModal from '@/components/ProductPreviewModal';
 import StockUpdateModal from '@/components/StockUpdateModal';
 import { useRouter } from "next/navigation";
+import ProductCard from '@/components/Products/ProductCard';
+
 
 
 
@@ -92,10 +92,10 @@ export default function AllProductsPage() {
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.product_name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === 'all' || product.category.category_id == categoryFilter;
-    const matchesStatus = statusFilter === 'all' || 
-      (statusFilter === 'active' && product.is_active) || 
+    const matchesStatus = statusFilter === 'all' ||
+      (statusFilter === 'active' && product.is_active) ||
       (statusFilter === 'inactive' && !product.is_active);
-    
+
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
@@ -115,51 +115,145 @@ export default function AllProductsPage() {
           <h1 className="text-2xl font-bold text-gray-800">Products</h1>
           <p className="text-gray-500 mt-1">Manage your product inventory</p>
         </div>
-        <Link href="/admin/product-management/add-product">
-          <button className="btn-primary flex items-center gap-2">
+        <Link href="/admin/console/product-management/add-product" className="inline-block">
+          <button className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-rose-300 rounded-lg shadow-sm hover:bg-rose-300/50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95">
             <PlusIcon className="w-5 h-5" />
             Add Product
           </button>
         </Link>
       </div>
 
-      {/* Filters */}
-      <div className="card">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="relative">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          {/* Search Box */}
+          <div className="relative flex-1 max-w-md">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
             <input
               type="text"
               placeholder="Search products..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="input-field pl-10"
+              className="w-full pl-10 pr-4 py-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200 ease-in-out bg-gray-50 hover:bg-white"
+              aria-label="Search products"
             />
           </div>
-          
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="input-field"
-          >
-            <option value="all">All Categories</option>
-            {/* Categories will be populated from Redux */}
-          </select>
 
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="input-field"
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
+          {/* Filter Controls */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Category Filter */}
+            <div className="relative">
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="w-full sm:w-48 px-4 py-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200 ease-in-out bg-gray-50 hover:bg-white appearance-none pr-10 cursor-pointer"
+                aria-label="Filter by category"
+              >
+                <option value="all">All Categories</option>
+                {/* Categories will be populated from Redux */}
+              </select>
+              <ChevronDownIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+
+            {/* Status Filter */}
+            <div className="relative">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full sm:w-40 px-4 py-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200 ease-in-out bg-gray-50 hover:bg-white appearance-none pr-10 cursor-pointer"
+                aria-label="Filter by status"
+              >
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+              <ChevronDownIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+          </div>
+        </div>
+
+        {/* Active Filters Indicator */}
+        {(searchTerm || categoryFilter !== 'all' || statusFilter !== 'all') && (
+          <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-100">
+            <FunnelIcon className="w-4 h-4 text-gray-400" />
+            <span className="text-sm text-gray-500">Active filters:</span>
+            {searchTerm && (
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-pink-100 text-pink-800">
+                Search: "{searchTerm}"
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="ml-1.5 hover:text-pink-900"
+                >
+                  ×
+                </button>
+              </span>
+            )}
+            {categoryFilter !== 'all' && (
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                Category
+                <button
+                  onClick={() => setCategoryFilter('all')}
+                  className="ml-1.5 hover:text-blue-900"
+                >
+                  ×
+                </button>
+              </span>
+            )}
+            {statusFilter !== 'all' && (
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                Status: {statusFilter}
+                <button
+                  onClick={() => setStatusFilter('all')}
+                  className="ml-1.5 hover:text-green-900"
+                >
+                  ×
+                </button>
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+          {filteredProducts.map((product, index) => (
+            <ProductCard
+              key={index}
+              products={product}
+              onDelete={handleDelete}
+              onEdit={handleStockUpdate} 
+            />
+          ))}
         </div>
       </div>
 
-      {/* Products Table */}
-      <div className="card">
+
+      {previewProduct && (
+        <ProductPreviewModal
+          product={previewProduct}
+          onClose={() => setPreviewProduct(null)}
+        />
+      )}
+
+      {stockUpdateProduct && (
+        <StockUpdateModal
+          product={stockUpdateProduct}
+          onClose={() => setStockUpdateProduct(null)}
+          onUpdate={handleStockUpdate}
+        />
+      )}
+    </div>
+  );
+}
+
+
+
+
+
+
+
+
+{/* <div className="card">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -178,8 +272,8 @@ export default function AllProductsPage() {
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-3">
                       {product.main_image ? (
-                        <img 
-                          src={product.main_image} 
+                        <img
+                          src={product.main_image}
                           alt={product.product_name}
                           className="w-12 h-12 rounded-lg object-cover"
                         />
@@ -209,23 +303,22 @@ export default function AllProductsPage() {
                     </button>
                   </td>
                   <td className="py-4 px-4">
-                    <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${
-                      product.is_active 
-                        ? 'bg-green-100 text-green-700' 
-                        : 'bg-gray-100 text-gray-700'
-                    }`}>
+                    <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${product.is_active
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-gray-100 text-gray-700'
+                      }`}>
                       {product.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
                   <td className="py-4 px-4">
                     <div className="flex items-center justify-end gap-2">
                       <button
-  onClick={() => router.push(`/admin/console/product-management/product-details/${product.product_id}`)}
-  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-  title="View Details"
->
-  <EyeIcon className="w-5 h-5" />
-</button>
+                        onClick={() => router.push(`/admin/console/product-management/product-details/${product.product_id}`)}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="View Details"
+                      >
+                        <EyeIcon className="w-5 h-5" />
+                      </button>
                       <Link href={`/admin/product-management/edit-product/${product.product_id}`}>
                         <button
                           className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
@@ -254,23 +347,4 @@ export default function AllProductsPage() {
             </div>
           )}
         </div>
-      </div>
-
-      {/* Modals */}
-      {previewProduct && (
-        <ProductPreviewModal
-          product={previewProduct}
-          onClose={() => setPreviewProduct(null)}
-        />
-      )}
-
-      {stockUpdateProduct && (
-        <StockUpdateModal
-          product={stockUpdateProduct}
-          onClose={() => setStockUpdateProduct(null)}
-          onUpdate={handleStockUpdate}
-        />
-      )}
-    </div>
-  );
-}
+      </div> */}
