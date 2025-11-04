@@ -25,6 +25,7 @@ export default function ProductDetailsPage() {
   const router = useRouter();
   const params = useParams();
   const productId = params.id;
+  const role = params.role;
 
   const { selectedProduct } = useSelector(state => state.products);
   const [loading, setLoading] = useState(true);
@@ -111,7 +112,7 @@ export default function ProductDetailsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/admin/product-management/all-products">
+          <Link href={`/${role}/console/product-management/all-products`}>
             <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
               <ArrowLeftIcon className="w-5 h-5" />
             </button>
@@ -122,7 +123,7 @@ export default function ProductDetailsPage() {
           </div>
         </div>
         <div className="flex gap-3">
-          <Link href={`/admin/product-management/edit-product/${productId}`}>
+          <Link href={`/${role}/console/product-management/edit-product/${productId}`}>
             <button className="btn-secondary flex items-center gap-2">
               <PencilIcon className="w-4 h-4" />
               Edit Product
@@ -362,6 +363,8 @@ export default function ProductDetailsPage() {
       {showEditVariantModal && selectedVariant && (
         <EditVariantModal
           variant={selectedVariant}
+          productId={selectedProduct.product_id}
+          images={selectedProduct.images || []}
           onClose={() => {
             setShowEditVariantModal(false);
             setSelectedVariant(null);

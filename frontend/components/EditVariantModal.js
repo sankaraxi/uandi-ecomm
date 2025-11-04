@@ -7,7 +7,7 @@ import Swal from 'sweetalert2';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-export default function EditVariantModal({ variant, onClose, onSuccess }) {
+export default function EditVariantModal({ variant, productId, images = [], onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     variant_name: variant.variant_name || '',
     sku: variant.sku || '',
@@ -19,6 +19,14 @@ export default function EditVariantModal({ variant, onClose, onSuccess }) {
     weight: variant.weight || '',
     unit: variant.unit || 'ml'
   });
+
+  // Existing images for this variant
+  const initialVariantImages = Array.isArray(images)
+    ? images.filter(img => img.variant_id === variant.variant_id)
+    : [];
+  const [existingImages, setExistingImages] = useState(initialVariantImages);
+  // New image URLs to add
+  const [newImages, setNewImages] = useState(['']);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -63,6 +71,22 @@ export default function EditVariantModal({ variant, onClose, onSuccess }) {
       const data = await response.json();
 
       if (data.success) {
+        // Add any new images
+        for (let i = 0; i < newImages.length; i++) {
+          const url = newImages[i];
+          if (!url) continue;
+          await fetch(`${API_URL}/products/images`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              product_id: productId,
+              variant_id: variant.variant_id,
+              image_url: url,
+              is_main: false
+            })
+          });
+        }
+
         Swal.fire({
           title: 'Success!',
           text: 'Variant updated successfully',
@@ -85,6 +109,29 @@ export default function EditVariantModal({ variant, onClose, onSuccess }) {
     }
   };
 
+  const handleAddNewImageField = () => setNewImages(imgs => [...imgs, '']);
+  const handleChangeNewImage = (idx, val) => setNewImages(imgs => imgs.map((u, i) => i === idx ? val : u));
+  const handleRemoveNewImage = (idx) => setNewImages(imgs => imgs.length > 1 ? imgs.filter((_, i) => i !== idx) : imgs);
+
+  const handleDeleteExistingImage = async (imageId) => {
+    try {
+      const res = await fetch(`${API_URL}/products/images/${imageId}`, { method: 'DELETE' });
+      const json = await res.json();
+      if (!json?.success) throw new Error(json?.message || 'Failed');
+      setExistingImages(imgs => imgs.filter(img => img.image_id !== imageId));
+      Swal.fire({
+        title: 'Deleted!',
+        text: 'Image removed',
+        icon: 'success',
+        confirmButtonColor: '#ec4899',
+        timer: 1200,
+        showConfirmButton: false
+      });
+    } catch (err) {
+      Swal.fire({ title: 'Error', text: err?.message || 'Failed to remove image', icon: 'error', confirmButtonColor: '#ec4899' });
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -98,7 +145,7 @@ export default function EditVariantModal({ variant, onClose, onSuccess }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -252,6 +299,47 @@ export default function EditVariantModal({ variant, onClose, onSuccess }) {
               )}
             </div>
           )}
+
+          {/* Variant Images management */}
+          <div className="space-y-3">
+            <h3 className="text-md font-semibold text-gray-800">Variant Images</h3>
+
+            {/* Existing images */}
+            {existingImages.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {existingImages.map(img => (
+                  <div key={img.image_id} className="relative group">
+                    <img src={img.image_url} alt="Variant image" className="w-full h-24 object-cover rounded-lg border" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                    <button type="button" onClick={() => handleDeleteExistingImage(img.image_id)} className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white p-1 rounded shadow">
+                      <span className="text-xs text-red-600">Delete</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">No images for this variant yet.</p>
+            )}
+
+            {/* Add new images */}
+            <div className="mt-2">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm text-gray-700">Add new image URLs</p>
+                <button type="button" onClick={handleAddNewImageField} className="btn-secondary text-xs">Add Image</button>
+              </div>
+              <div className="space-y-2">
+                {newImages.map((u, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <input type="text" value={u} onChange={(e) => handleChangeNewImage(idx, e.target.value)} placeholder="https://..." className="input-field flex-1" />
+                    {newImages.length > 1 && (
+                      <button type="button" onClick={() => handleRemoveNewImage(idx)} className="text-red-600 hover:text-red-700 p-2 hover:bg-red-50 rounded">
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
 
           <div className="flex justify-end gap-3 pt-4">
             <button

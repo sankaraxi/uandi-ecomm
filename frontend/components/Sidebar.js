@@ -321,7 +321,14 @@ const navItems = [
   { 
     name: "Content", 
     icon: FileText, 
-    href: `${base}/content` 
+    href: `${base}/content`,
+    subItems: [
+      { name: "Blogs", icon: List, href: `${base}/console/content-management/blogs` },
+      { name: "Testimonials", icon: Package, href: `${base}/console/content-management/testimonials` },
+      { name: "Reels", icon: Package, href: `${base}/console/content-management/reels` },
+      { name: "FAQ", icon: Package, href: `${base}/console/content-management/faq` },
+      { name: "Privacy Policy", icon: Package, href: `${base}/console/content-management/privacy-policy` },
+    ]
   },
   { 
     name: "Security Roles", 

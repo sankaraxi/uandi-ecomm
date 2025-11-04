@@ -69,6 +69,13 @@ const productRoutes = require('./routes/productRoutes');
 app.use('/categories', categoryRoutes);
 app.use('/products', productRoutes);
 
+const blogRoutes = require('./routes/blogRoutes');
+const testimonialRoutes = require('./routes/testimonialRoutes');
+const productReelRoutes = require('./routes/productReelRoutes');
+
+app.use('/blogs', blogRoutes);
+app.use('/testimonials', testimonialRoutes);
+app.use('/reels', productReelRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

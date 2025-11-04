@@ -1,7 +1,7 @@
 // frontend/app/(admin)/product-management/all-products/page.js
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchProducts, deleteProduct, updateStock } from '@/store/productsSlice';
 import { fetchCategories } from '@/store/categoriesSlice';
@@ -17,19 +17,21 @@ import {
 } from '@heroicons/react/24/outline';
 import ProductPreviewModal from '@/components/ProductPreviewModal';
 import StockUpdateModal from '@/components/StockUpdateModal';
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 
 
 export default function AllProductsPage() {
   const dispatch = useDispatch();
   const { products, loading } = useSelector(state => state.products);
+  const { categories } = useSelector(state => state.categories || { categories: [] });
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [previewProduct, setPreviewProduct] = useState(null);
   const [stockUpdateProduct, setStockUpdateProduct] = useState(null);
   const router = useRouter();
+  const { role } = useParams();
 
   useEffect(() => {
     dispatch(fetchProducts());
@@ -99,6 +101,13 @@ export default function AllProductsPage() {
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
+  const stats = useMemo(() => {
+    const total = products?.length || 0;
+    const active = products?.filter(p => p.is_active)?.length || 0;
+    const outOfStock = products?.filter(p => (p.variants || []).reduce((s, v) => s + (v.stock || 0), 0) <= 0)?.length || 0;
+    return { total, active, outOfStock };
+  }, [products]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -110,17 +119,46 @@ export default function AllProductsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Products</h1>
-          <p className="text-gray-500 mt-1">Manage your product inventory</p>
+          <h1 className="text-2xl font-bold text-gray-900">Products</h1>
+          <p className="text-gray-500 mt-1">Manage your catalog, stock and visibility</p>
         </div>
-        <Link href="/admin/product-management/add-product">
-          <button className="btn-primary flex items-center gap-2">
-            <PlusIcon className="w-5 h-5" />
-            Add Product
-          </button>
+        <Link href={`/${role}/console/product-management/add-product`} className="btn-primary inline-flex items-center gap-2">
+          <PlusIcon className="w-5 h-5" />
+          Add Product
         </Link>
+      </div>
+
+      {/* Quick stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="card flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-500">Total Products</p>
+            <p className="text-2xl font-semibold text-gray-900">{stats.total}</p>
+          </div>
+          <div className="rounded-lg bg-pink-50 p-3">
+            <FunnelIcon className="w-6 h-6 text-pink-600" />
+          </div>
+        </div>
+        <div className="card flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-500">Active</p>
+            <p className="text-2xl font-semibold text-gray-900">{stats.active}</p>
+          </div>
+          <div className="rounded-lg bg-green-50 p-3">
+            <span className="inline-block h-3 w-3 rounded-full bg-green-500" />
+          </div>
+        </div>
+        <div className="card flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-500">Out of Stock</p>
+            <p className="text-2xl font-semibold text-gray-900">{stats.outOfStock}</p>
+          </div>
+          <div className="rounded-lg bg-amber-50 p-3">
+            <span className="inline-block h-3 w-3 rounded-full bg-amber-500" />
+          </div>
+        </div>
       </div>
 
       {/* Filters */}
@@ -143,7 +181,9 @@ export default function AllProductsPage() {
             className="input-field"
           >
             <option value="all">All Categories</option>
-            {/* Categories will be populated from Redux */}
+            {(categories || []).map(cat => (
+              <option key={cat.category_id} value={cat.category_id}>{cat.category_name}</option>
+            ))}
           </select>
 
           <select
@@ -189,7 +229,9 @@ export default function AllProductsPage() {
                         </div>
                       )}
                       <div>
-                        <p className="font-medium text-gray-800">{product.product_name}</p>
+                        <Link href={`/${role}/console/product-management/product-details/${product.product_id}`} className="font-medium text-gray-800 hover:text-pink-600">
+                          {product.product_name}
+                        </Link>
                         <p className="text-sm text-gray-500">ID: {product.product_id}</p>
                       </div>
                     </div>
@@ -220,19 +262,14 @@ export default function AllProductsPage() {
                   <td className="py-4 px-4">
                     <div className="flex items-center justify-end gap-2">
                       <button
-  onClick={() => router.push(`/admin/console/product-management/product-details/${product.product_id}`)}
+  onClick={() => router.push(`/${role}/console/product-management/product-details/${product.product_id}`)}
   className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
   title="View Details"
 >
   <EyeIcon className="w-5 h-5" />
 </button>
-                      <Link href={`/admin/product-management/edit-product/${product.product_id}`}>
-                        <button
-                          className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                          title="Edit"
-                        >
-                          <PencilIcon className="w-5 h-5" />
-                        </button>
+                      <Link href={`/${role}/console/product-management/edit-product/${product.product_id}`} className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" title="Edit">
+                        <PencilIcon className="w-5 h-5" />
                       </Link>
                       <button
                         onClick={() => handleDelete(product.product_id, product.product_name)}
