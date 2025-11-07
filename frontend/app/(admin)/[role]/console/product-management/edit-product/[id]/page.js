@@ -1,4 +1,4 @@
-// frontend/app/(admin)/product-management/edit-product/[variant-id]/page.js
+// frontend/app/(admin)/product-management/edit-product/[productId]/page.js
 'use client';
 
 import { useState, useEffect } from 'react';

@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
+import { mergeCarts, clearCart } from './slices/cartSlice';
 
 import Swal from 'sweetalert2';
 
@@ -14,13 +15,14 @@ export const verifyUser = createAsyncThunk('auth/verifyUser', async (_, { reject
   }
 });
 
-export const login = createAsyncThunk('auth/login', async ({ identifier, password }, { rejectWithValue }) => {
+export const login = createAsyncThunk('auth/login', async ({ identifier, password }, { dispatch, rejectWithValue }) => {
   try {
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
       { identifier, password },
       { withCredentials: true }
     );
+    dispatch(mergeCarts());
     return response.data.user;
   } catch (error) {
     return rejectWithValue(error.response?.data?.error || 'Login failed');
@@ -67,9 +69,10 @@ export const resetPassword = createAsyncThunk('auth/resetPassword', async ({ tok
   }
 });
 
-export const logout = createAsyncThunk('auth/logout', async (_, { rejectWithValue }) => {
+export const logout = createAsyncThunk('auth/logout', async (_, { dispatch, rejectWithValue }) => {
   try {
     const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {}, { withCredentials: true });
+    dispatch(clearCart());
     return response.data.message;
   } catch (error) {
     return rejectWithValue(error.response?.data?.error || 'Logout failed');

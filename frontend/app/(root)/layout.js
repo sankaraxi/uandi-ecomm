@@ -1,6 +1,12 @@
+'use client';
+import { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import { Geist, Geist_Mono } from "next/font/google";
 import "../globals.css";
 import Navbar from "@/components/Navbar";
+import ReduxProvider from "@/components/ReduxProvider";
+import CartModal from "@/components/CartModal";
+import { fetchCart } from '@/store/slices/cartSlice';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -12,13 +18,27 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+function CartInitializer() {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(fetchCart());
+  }, [dispatch]);
+
+  return null;
+}
+
 export default function Layout({ children }) {
   return (
-    <div
-      className={`${geistSans.variable} ${geistMono.variable} font-sans bg-[#FCFBF5] text-gray-900`}
-    >
-      <Navbar />
-      <main>{children}</main>
-    </div>
+    <ReduxProvider>
+      <CartInitializer />
+      <div
+        className={`${geistSans.variable} ${geistMono.variable} font-sans bg-[#FCFBF5] text-gray-900`}
+      >
+        <Navbar />
+        <main>{children}</main>
+        <CartModal />
+      </div>
+    </ReduxProvider>
   );
 }

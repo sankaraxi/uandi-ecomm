@@ -4,6 +4,7 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const User = require('./models/authModel');
+const cartRoutes = require('./routes/cartRoutes');
 
 const cors = require('cors');
 require('dotenv').config();
@@ -76,6 +77,7 @@ const productReelRoutes = require('./routes/productReelRoutes');
 app.use('/blogs', blogRoutes);
 app.use('/testimonials', testimonialRoutes);
 app.use('/reels', productReelRoutes);
+app.use('/api/cart', cartRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
