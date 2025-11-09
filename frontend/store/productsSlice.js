@@ -61,8 +61,8 @@ export const deleteProduct = createAsyncThunk(
 
 export const deleteVariant = createAsyncThunk(
   'products/deleteVariant',
-  async ({ productId, variantId }) => {
-    const response = await fetch(`${API_URL}/products/${productId}/variants/${variantId}`, {
+  async ({  variantId }) => {
+    const response = await fetch(`${API_URL}/products/variants/${variantId}`, {
       method: 'DELETE'
     });
     const data = await response.json();
@@ -95,6 +95,7 @@ export const updateVariant = createAsyncThunk(
     return data;
   }
 );
+
 
 export const getAllTags = createAsyncThunk(
     'products/tags',

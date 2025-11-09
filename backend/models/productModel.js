@@ -5,23 +5,24 @@ const productModel = {
   // Get all products with category and variants
   getAllProducts: async () => {
     const query = `
-      SELECT 
-        p.product_id, p.product_name, p.description, p.is_active, 
+      SELECT
+        p.product_id, p.product_name, p.description, p.is_active,
         p.created_at, p.updated_at,
         c.category_id, c.category_name,
-        v.variant_id, v.variant_name, v.sku, v.mrp_price, v.price, 
+        v.variant_id, v.variant_name, v.sku, v.mrp_price, v.price,
         v.gst_percentage, v.gst_included, v.gst_amount, v.final_price,
         v.stock, v.weight, v.unit,
-        pi.image_id, pi.image_url, pi.is_main
+        pi.image_id, pi.image_url, pi.is_main, pi.variant_id AS image_variant_id
       FROM products p
-      LEFT JOIN categories c ON p.category_id = c.category_id
-      LEFT JOIN variants v ON p.product_id = v.product_id
-      LEFT JOIN product_images pi ON p.product_id = pi.product_id AND pi.is_main = TRUE
-      ORDER BY p.created_at DESC
+             LEFT JOIN categories c ON p.category_id = c.category_id
+             LEFT JOIN variants v ON p.product_id = v.product_id
+             LEFT JOIN product_images pi ON v.variant_id = pi.variant_id
+      ORDER BY p.created_at DESC;
     `;
     const [rows] = await pool.query(query);
     return rows;
   },
+
 
   // Get product by ID with full details
   getProductById: async (id) => {

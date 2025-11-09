@@ -16,12 +16,12 @@ const cartController = {
     // Add item
     addToCart: async (req, res) => {
         try {
-            const { user_id, product_id, variant_id, quantity, price } = req.body;
+            const { user_id, product_id, variant_id, quantity, price, main_image } = req.body;
 
             if (!user_id || !product_id || !variant_id)
                 return res.status(400).json({ success: false, message: 'Missing fields' });
 
-            await cartModel.addToCart({ user_id, product_id, variant_id, quantity, price });
+            await cartModel.addToCart({ user_id, product_id, variant_id, quantity, price, main_image });
 
             const items = await cartModel.getCartByUserId(user_id);
             res.status(201).json({ success: true, items });

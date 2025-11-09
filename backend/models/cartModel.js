@@ -10,7 +10,7 @@ const cartModel = {
               v.final_price, 
               v.price AS variant_price,
               v.stock,
-              p.main_image
+              ci.variant_image AS main_image
        FROM cart_items ci
        JOIN products p ON ci.product_id = p.product_id
        JOIN variants v ON ci.variant_id = v.variant_id
@@ -21,7 +21,7 @@ const cartModel = {
     },
 
     // Add item to cart (create or update if exists)
-    addToCart: async ({ user_id, product_id, variant_id, quantity, price }) => {
+    addToCart: async ({ user_id, product_id, variant_id, quantity, price, main_image }) => {
         const [existing] = await pool.query(
             'SELECT * FROM cart_items WHERE user_id = ? AND product_id = ? AND variant_id = ?',
             [user_id, product_id, variant_id]
@@ -35,8 +35,8 @@ const cartModel = {
             return updateResult;
         } else {
             const [result] = await pool.query(
-                'INSERT INTO cart_items (user_id, product_id, variant_id, quantity, price) VALUES (?, ?, ?, ?, ?)',
-                [user_id, product_id, variant_id, quantity, price]
+                'INSERT INTO cart_items (user_id, product_id, variant_id, quantity, price, variant_image) VALUES (?, ?, ?, ?, ?, ?)',
+                [user_id, product_id, variant_id, quantity, price, main_image]
             );
             return result;
         }

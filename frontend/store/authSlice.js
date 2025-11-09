@@ -97,6 +97,10 @@ const authSlice = createSlice({
     error: null,
   },
   reducers: {
+    setUser(state, action) {
+      state.user = action.payload;
+      state.isAuthenticated = true;
+    },
     clearError(state) {
       state.error = null;
     },
@@ -108,12 +112,14 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(verifyUser.fulfilled, (state, action) => {
+        localStorage.setItem('user', JSON.stringify(action.payload));
         state.user = action.payload;
         console.log('Verified user:', action.payload);
         state.isAuthenticated = true;
         state.loading = false;
       })
       .addCase(verifyUser.rejected, (state, action) => {
+        localStorage.removeItem('user');
         state.loading = false;
         state.isAuthenticated = false;
         state.user = null;
@@ -124,7 +130,7 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(login.fulfilled, (state, action) => {
-
+        localStorage.setItem('user', JSON.stringify(action.payload));
         state.user = action.payload;
         console.log('Logged in user:', action.payload);
         state.isAuthenticated = true;
@@ -210,6 +216,7 @@ const authSlice = createSlice({
         });
       })
       .addCase(logout.fulfilled, (state) => {
+        localStorage.removeItem('user');
         state.user = null;
         state.isAuthenticated = false;
         state.loading = false;
@@ -242,5 +249,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearError } = authSlice.actions;
+export const { setUser, clearError } = authSlice.actions;
 export default authSlice.reducer;

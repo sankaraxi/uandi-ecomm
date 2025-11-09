@@ -70,6 +70,8 @@ export default function ProductDetailsPage() {
             ? currentVariant.images
             : [currentVariant.image_url || product.main_image];
 
+    console.log("variantImages", variantImages);
+
     // Switch variant
     const handleVariantClick = (index) => {
         setSelectedVariantIndex(index);
@@ -110,7 +112,7 @@ export default function ProductDetailsPage() {
                         <div className="relative bg-gray-50 rounded-2xl overflow-hidden">
                             <div className="relative aspect-[4/5]">
                                 <img
-                                    src={variantImages[selectedImageIndex]}
+                                    src={variantImages[selectedImageIndex].image_url}
                                     alt={product.product_name}
                                     className="w-full h-full object-cover transition-opacity duration-500"
                                 />
@@ -157,7 +159,7 @@ export default function ProductDetailsPage() {
                                         }`}
                                     >
                                         <img
-                                            src={img}
+                                            src={img.image_url}
                                             alt=""
                                             className="w-full h-full object-cover"
                                         />

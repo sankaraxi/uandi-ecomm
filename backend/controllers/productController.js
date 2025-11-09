@@ -6,11 +6,11 @@ const productController = {
   getAllProducts: async (req, res) => {
     try {
       const rows = await productModel.getAllProducts();
-      
-      // Group products with their variants
+
       const productsMap = new Map();
-      
+
       rows.forEach(row => {
+        // Create product if not already in map
         if (!productsMap.has(row.product_id)) {
           productsMap.set(row.product_id, {
             product_id: row.product_id,
@@ -23,38 +23,57 @@ const productController = {
               category_id: row.category_id,
               category_name: row.category_name
             },
-            main_image: row.image_url,
+            main_image: row.image_url || null, // keep as is
             variants: []
           });
         }
-        
+
+        const product = productsMap.get(row.product_id);
+
+        // Handle variants
         if (row.variant_id) {
-          const product = productsMap.get(row.product_id);
-          const variantExists = product.variants.some(v => v.variant_id === row.variant_id);
-          
-          if (!variantExists) {
-            product.variants.push({
+          let variant = product.variants.find(v => v.variant_id === row.variant_id);
+          if (!variant) {
+            variant = {
               variant_id: row.variant_id,
               variant_name: row.variant_name,
               sku: row.sku,
               mrp_price: row.mrp_price,
               price: row.price,
               gst_percentage: row.gst_percentage,
+              gst_included: row.gst_included,
+              gst_amount: row.gst_amount,
               final_price: row.final_price,
               stock: row.stock,
               weight: row.weight,
-              unit: row.unit
-            });
+              unit: row.unit,
+              images: [] // ✅ initialize images array
+            };
+            product.variants.push(variant);
+          }
+
+          // Handle variant images
+          if (row.image_id && row.image_variant_id === row.variant_id) {
+            const imageExists = variant.images.some(img => img.image_id === row.image_id);
+            if (!imageExists) {
+              variant.images.push({
+                image_id: row.image_id,
+                image_url: row.image_url,
+                is_main: row.is_main
+              });
+            }
           }
         }
       });
-      
+
       const products = Array.from(productsMap.values());
       res.json({ success: true, data: products });
     } catch (error) {
+      console.error("Error in getAllProducts:", error);
       res.status(500).json({ success: false, message: error.message });
     }
   },
+
 
   // Get product by ID
   getProductById: async (req, res) => {

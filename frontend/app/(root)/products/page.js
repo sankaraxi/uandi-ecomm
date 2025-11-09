@@ -8,12 +8,10 @@ import { addToCart, openCart } from '@/store/slices/cartSlice';
 import Link from 'next/link';
 import {
     ArrowLeftIcon,
-    PhotoIcon,
     CubeIcon,
     MagnifyingGlassIcon,
     HeartIcon,
     FunnelIcon,
-    AdjustmentsHorizontalIcon,
     XMarkIcon,
     ChevronDownIcon,
 } from '@heroicons/react/24/outline';
@@ -30,6 +28,9 @@ export default function AllProductsPage() {
     const { products, loading: reduxLoading } = useSelector(
         (state) => state.products
     );
+    const { isAuthenticated } = useSelector((state) => state.auth);
+
+
 
     const [localLoading, setLocalLoading] = useState(true);
     const [showImageGallery, setShowImageGallery] = useState(false);
@@ -425,19 +426,21 @@ export default function AllProductsPage() {
                                     onClick={() => router.push(`/products/${product.product_id}`)}
                                 >
                                     {/* Wishlist Button */}
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            toggleWishlist(product.product_id);
-                                        }}
-                                        className="absolute top-4 right-4 z-10 w-10 h-10 bg-white/90 backdrop-blur-sm hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110"
-                                    >
-                                        {isInWishlist ? (
-                                            <HeartIconSolid className="w-5 h-5 text-red-500" />
-                                        ) : (
-                                            <HeartIcon className="w-5 h-5 text-gray-600 hover:text-gray-900" />
-                                        )}
-                                    </button>
+                                    {isAuthenticated && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                toggleWishlist(product.product_id);
+                                            }}
+                                            className="absolute top-4 right-4 z-10 w-10 h-10 bg-white/90 backdrop-blur-sm hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110"
+                                        >
+                                            {isInWishlist ? (
+                                                <HeartIconSolid className="w-5 h-5 text-red-500" />
+                                            ) : (
+                                                <HeartIcon className="w-5 h-5 text-gray-600 hover:text-gray-900" />
+                                            )}
+                                        </button>
+                                    )}
 
                                     {/* Image */}
                                     <div className="relative aspect-square overflow-hidden bg-gray-100 rounded-t-2xl">

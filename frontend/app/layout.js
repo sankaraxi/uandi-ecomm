@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ReduxProvider from "@/components/ReduxProvider";
 import Navbar from "@/components/Navbar";
+import AuthHydration from "@/components/AuthHydration";
 
 // Load fonts
 const geistSans = Geist({
@@ -28,8 +29,10 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} font-sans bg-[#FCFBF5] text-gray-900`}
       >
         <ReduxProvider>
-          {/* <Navbar /> */}
-          <main>{children}</main>
+          <AuthHydration>
+            {/* <Navbar /> */}
+            <main>{children}</main>
+          </AuthHydration>
         </ReduxProvider>
       </body>
     </html>

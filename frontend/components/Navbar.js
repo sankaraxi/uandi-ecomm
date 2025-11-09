@@ -9,16 +9,22 @@ import {
   User,
   Menu,
   X,
+  LogOut,
+  UserCircle,
+  Package,
+  ChevronDown
 } from 'lucide-react';
 import AuthModal from './AuthModal';
 import { useDispatch, useSelector } from 'react-redux';
 import { openCart } from '@/store/slices/cartSlice';
+import { logout } from '@/store/authSlice';
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const dispatch = useDispatch();
   const { items } = useSelector((state) => state.cart);
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
 
   const navLinks = [
     { name: 'Home', href: '/' },
@@ -79,14 +85,43 @@ export default function Navbar() {
                 )}
               </button>
 
-              {/* Login Button */}
-              <button
-                  onClick={() => setAuthModalOpen(true)}
-                  className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-gray-100 active:scale-95 transition"
-              >
-                <User className="w-4 h-4" />
-                <span>Login</span>
-              </button>
+              {isAuthenticated ? (
+                <div className="relative group">
+                  <button className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-gray-100 active:scale-95 transition">
+                    {user?.profileImage ? (
+                      <img src={user.profileImage} alt="Profile" className="w-5 h-5 rounded-full" />
+                    ) : (
+                      <UserCircle className="w-5 h-5" />
+                    )}
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+                  <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 group-hover:visible transition-all duration-200 invisible">
+                    <Link href="/profile" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                      <User className="w-4 h-4" />
+                      Profile
+                    </Link>
+                    <Link href="/orders" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                      <Package className="w-4 h-4" />
+                      Orders
+                    </Link>
+                    <button
+                      onClick={() => dispatch(logout())}
+                      className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                    onClick={() => setAuthModalOpen(true)}
+                    className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-gray-100 active:scale-95 transition"
+                >
+                  <User className="w-4 h-4" />
+                  <span>Login</span>
+                </button>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -127,16 +162,49 @@ export default function Navbar() {
                   <ShoppingBag className="w-5 h-5 text-gray-700" onClick={() => dispatch(openCart())}/>
                 </div>
 
-                <button
-                    onClick={() => {
-                      setAuthModalOpen(true);
-                      setMenuOpen(false);
-                    }}
-                    className="flex items-center gap-2 border border-gray-400 rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-gray-100 active:scale-95 transition"
-                >
-                  <User className="w-4 h-4" />
-                  <span>Login</span>
-                </button>
+                {isAuthenticated ? (
+                  <div className="relative group">
+                    <button className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-gray-100 active:scale-95 transition">
+                      {user?.profileImage ? (
+                        <img src={user.profileImage} alt="Profile" className="w-5 h-5 rounded-full" />
+                      ) : (
+                        <UserCircle className="w-5 h-5" />
+                      )}
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 group-hover:visible transition-all duration-200 invisible">
+                      <Link href="/profile" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        <User className="w-4 h-4" />
+                        Profile
+                      </Link>
+                      <Link href="/orders" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        <Package className="w-4 h-4" />
+                        Orders
+                      </Link>
+                      <button
+                        onClick={() => {
+                          dispatch(logout());
+                          setMenuOpen(false);
+                        }}
+                        className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                      onClick={() => {
+                        setAuthModalOpen(true);
+                        setMenuOpen(false);
+                      }}
+                      className="flex items-center gap-2 border border-gray-400 rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-gray-100 active:scale-95 transition"
+                  >
+                    <User className="w-4 h-4" />
+                    <span>Login</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>

@@ -14,6 +14,13 @@
   animation: fadeIn 0.3s ease-out;
 }
 
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 .animate-slideUp {
   animation: slideUp 0.4s ease-out;
 }

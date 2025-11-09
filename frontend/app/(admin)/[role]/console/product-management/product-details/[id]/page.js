@@ -134,28 +134,38 @@ export default function ProductDetailsPage() {
       <div className="min-h-screen  py-8">
         <div className="container mx-auto px-4 max-w-7xl">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-4">
+          {/* Header Section */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+            {/* Left Side: Back + Title */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 text-center sm:text-left">
               <Link href={`/${role}/console/product-management/all-products`}>
-                <button className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors duration-200 p-3 hover:bg-white rounded-2xl shadow-sm">
+                <button className="flex items-center justify-center sm:justify-start gap-2 text-gray-600 hover:text-gray-800 transition-colors duration-200 p-2 sm:p-3 hover:bg-white rounded-xl shadow-sm w-full sm:w-auto">
                   <ArrowLeftIcon className="w-5 h-5" />
                   <span className="font-medium">Back to Products</span>
                 </button>
               </Link>
-              <div className="  p-4">
-                <h1 className="text-3xl font-bold text-gray-900">{selectedProduct.product_name}</h1>
-                <p className="text-gray-500 mt-1">Manage product details and variants</p>
+
+              <div className="mt-5 sm:mt-0">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 truncate max-w-[90vw] sm:max-w-none">
+                  {selectedProduct.product_name}
+                </h1>
+                <p className="text-gray-500 text-sm sm:text-base mt-1">
+                  Manage product details and variants
+                </p>
               </div>
             </div>
-            <div className="flex gap-3">
+
+            {/* Right Side: Edit Button */}
+            <div className="flex justify-center sm:justify-end">
               <Link href={`/${role}/console/product-management/edit-product/${productId}`}>
-                <button className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 font-semibold py-3 px-6 rounded-xl transition-all duration-200 hover:shadow-md">
+                <button className="flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 font-semibold py-2.5 px-5 sm:py-3 sm:px-6 rounded-xl transition-all duration-200 hover:shadow-md w-full sm:w-auto">
                   <PencilIcon className="w-5 h-5" />
                   Edit Product
                 </button>
               </Link>
             </div>
           </div>
+
 
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">

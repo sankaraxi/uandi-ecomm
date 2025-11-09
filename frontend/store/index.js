@@ -7,6 +7,7 @@ import blogReducer from './slices/blogSlice';
 import testimonialReducer from './slices/testimonialSlice';
 import reelReducer from './slices/reelSlice';
 import cartReducer from './slices/cartSlice';
+import addressReducer from './slices/addressSlice';
 
 export const store = configureStore({
   reducer: {
@@ -16,7 +17,8 @@ export const store = configureStore({
     products: productsReducer,
     cart: cartReducer,
     blogs: blogReducer,
-        testimonials: testimonialReducer,
-        reels: reelReducer,
+    testimonials: testimonialReducer,
+    reels: reelReducer,
+    addresses: addressReducer,
   },
 });

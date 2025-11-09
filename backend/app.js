@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const User = require('./models/authModel');
 const cartRoutes = require('./routes/cartRoutes');
+const addressesRoutes = require('./routes/addressRoutes');
 
 const cors = require('cors');
 require('dotenv').config();
@@ -77,7 +78,10 @@ const productReelRoutes = require('./routes/productReelRoutes');
 app.use('/blogs', blogRoutes);
 app.use('/testimonials', testimonialRoutes);
 app.use('/reels', productReelRoutes);
-app.use('/api/cart', cartRoutes);
+app.use('/cart', cartRoutes);
+
+app.use("/address",addressesRoutes)
+
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

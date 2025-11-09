@@ -12,12 +12,15 @@ export default function CartModal() {
   const { isOpen, items, loading } = useSelector((state) => state.cart);
 
   const handleClose = () => dispatch(closeCart());
-  const handleRemove = (item) => dispatch(removeFromCart(item));
+  const handleRemove = (item) => {
+    console.log('Removing item:', item);
+    dispatch(removeFromCart(item));
+  };
   const handleClearCart = () => dispatch(clearCart());
 
-  const handleQuantityChange = (variant_id, quantity) => {
+  const handleQuantityChange = (cart_item_id, quantity) => {
     if (quantity < 1) return;
-    dispatch(updateCartItemQuantity({ variant_id, quantity }));
+    dispatch(updateCartItemQuantity({ cart_item_id, quantity }));
   };
 
   const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
@@ -100,11 +103,11 @@ export default function CartModal() {
                         </div>
                         <div className="flex flex-1 items-center justify-between text-sm">
                           <div className="flex items-center border border-gray-200 rounded">
-                            <button onClick={() => handleQuantityChange(item.variant_id, item.quantity - 1)} className="p-1.5 hover:bg-gray-100 rounded-l">
+                            <button onClick={() => handleQuantityChange(item.cart_item_id, item.quantity - 1)} className="p-1.5 hover:bg-gray-100 rounded-l">
                               <MinusIcon className="h-4 w-4" />
                             </button>
                             <span className="px-3">{item.quantity}</span>
-                            <button onClick={() => handleQuantityChange(item.variant_id, item.quantity + 1)} className="p-1.5 hover:bg-gray-100 rounded-r">
+                            <button onClick={() => handleQuantityChange(item.cart_item_id, item.quantity + 1)} className="p-1.5 hover:bg-gray-100 rounded-r">
                               <PlusIcon className="h-4 w-4" />
                             </button>
                           </div>
