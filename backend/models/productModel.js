@@ -47,7 +47,7 @@ const productModel = {
     );
 
     const [mainImage] = await pool.query(
-        'SELECT * FROM product_images WHERE product_id = ? AND is_main = 1 LIMIT 1',
+        'SELECT * FROM product_images WHERE product_id = ?',
         [id]
     );
 

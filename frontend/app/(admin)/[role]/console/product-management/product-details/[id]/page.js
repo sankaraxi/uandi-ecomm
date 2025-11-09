@@ -31,6 +31,7 @@ export default function ProductDetailsPage() {
 
   const { selectedProduct } = useSelector(state => state.products);
 
+
   console.log(selectedProduct);
 
   const [loading, setLoading] = useState(true);
@@ -186,7 +187,7 @@ export default function ProductDetailsPage() {
                       <div className="space-y-4">
                         <div className="relative bg-gray-100 rounded-xl overflow-hidden aspect-square cursor-pointer" onClick={openImageGallery}>
                           <img
-                              src={selectedProduct.main_image.find(img => img.is_main)?.image_url || selectedProduct.main_image[0].image_url}
+                              src={selectedProduct.main_image?.[0]?.image_url}
                               alt={selectedProduct.product_name}
                               className="w-full h-full object-cover"
                               onClick={openImageGallery}
