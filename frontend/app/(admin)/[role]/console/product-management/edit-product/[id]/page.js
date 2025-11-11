@@ -1,4 +1,4 @@
-// frontend/app/(admin)/product-management/edit-product/[id]/page.js
+// frontend/app/(admin)/product-management/edit-product/[productId]/page.js
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -50,7 +50,7 @@ export default function EditProductPage() {
         is_active: selectedProduct.is_active
       });
 
-      setImages(selectedProduct.images.map(img => ({
+      setImages(selectedProduct.main_image.map(img => ({
         ...img,
         isNew: false
       })));
@@ -173,7 +173,7 @@ export default function EditProductPage() {
         icon: 'success',
         confirmButtonColor: '#ec4899'
       }).then(() => {
-        router.push(`/admin/product-management/product-details/${productId}`);
+        router.push(`/admin/console/product-management/product-details/${productId}`);
       });
     } catch (error) {
       Swal.fire({
@@ -198,7 +198,7 @@ export default function EditProductPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href={`/admin/product-management/product-details/${productId}`}>
+          <Link href={`/admin/console/product-management/product-details/${productId}`}>
             <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
               <ArrowLeftIcon className="w-5 h-5" />
             </button>

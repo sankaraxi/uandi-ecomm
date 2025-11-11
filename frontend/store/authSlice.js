@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
+import { mergeCarts, clearCart } from './slices/cartSlice';
 
 import Swal from 'sweetalert2';
 
@@ -14,13 +15,14 @@ export const verifyUser = createAsyncThunk('auth/verifyUser', async (_, { reject
   }
 });
 
-export const login = createAsyncThunk('auth/login', async ({ identifier, password }, { rejectWithValue }) => {
+export const login = createAsyncThunk('auth/login', async ({ identifier, password }, { dispatch, rejectWithValue }) => {
   try {
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
       { identifier, password },
       { withCredentials: true }
     );
+    dispatch(mergeCarts());
     return response.data.user;
   } catch (error) {
     return rejectWithValue(error.response?.data?.error || 'Login failed');
@@ -67,9 +69,10 @@ export const resetPassword = createAsyncThunk('auth/resetPassword', async ({ tok
   }
 });
 
-export const logout = createAsyncThunk('auth/logout', async (_, { rejectWithValue }) => {
+export const logout = createAsyncThunk('auth/logout', async (_, { dispatch, rejectWithValue }) => {
   try {
     const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {}, { withCredentials: true });
+    dispatch(clearCart());
     return response.data.message;
   } catch (error) {
     return rejectWithValue(error.response?.data?.error || 'Logout failed');
@@ -94,6 +97,10 @@ const authSlice = createSlice({
     error: null,
   },
   reducers: {
+    setUser(state, action) {
+      state.user = action.payload;
+      state.isAuthenticated = true;
+    },
     clearError(state) {
       state.error = null;
     },
@@ -105,12 +112,14 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(verifyUser.fulfilled, (state, action) => {
+        localStorage.setItem('user', JSON.stringify(action.payload));
         state.user = action.payload;
         console.log('Verified user:', action.payload);
         state.isAuthenticated = true;
         state.loading = false;
       })
       .addCase(verifyUser.rejected, (state, action) => {
+        localStorage.removeItem('user');
         state.loading = false;
         state.isAuthenticated = false;
         state.user = null;
@@ -121,7 +130,7 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(login.fulfilled, (state, action) => {
-
+        localStorage.setItem('user', JSON.stringify(action.payload));
         state.user = action.payload;
         console.log('Logged in user:', action.payload);
         state.isAuthenticated = true;
@@ -207,6 +216,7 @@ const authSlice = createSlice({
         });
       })
       .addCase(logout.fulfilled, (state) => {
+        localStorage.removeItem('user');
         state.user = null;
         state.isAuthenticated = false;
         state.loading = false;
@@ -239,5 +249,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearError } = authSlice.actions;
+export const { setUser, clearError } = authSlice.actions;
 export default authSlice.reducer;
