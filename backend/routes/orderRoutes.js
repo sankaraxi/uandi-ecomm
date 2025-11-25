@@ -10,4 +10,8 @@ router.post('/create', orderController.createOrder);
 
 router.get("/getOrders/:userId",orderController.getUserOrders)
 
+router.get('/all', orderController.getAllOrders);
+
+router.get('/:orderNumber', orderController.getOrder);
+
 module.exports = router;

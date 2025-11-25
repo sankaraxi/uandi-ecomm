@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter, useParams } from 'next/navigation';
 import { fetchProductById, updateProduct, clearSelectedProduct, getAllTags } from '@/store/productsSlice';
+import { fetchProductAttributes, createProductAttributes, updateProductAttributes } from '@/store/productAttributesSlice';
 import { fetchCategories } from '@/store/categoriesSlice';
 import Swal from 'sweetalert2';
 import { PlusIcon, TrashIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
@@ -33,10 +34,17 @@ export default function EditProductPage() {
 
   const [images, setImages] = useState([]);
   const [deletedImages, setDeletedImages] = useState([]);
+  const { item: productAttributes } = useSelector(state => state.productAttributes);
+  const [attributesForm, setAttributesForm] = useState({
+    key_ingredients: '',
+    know_about_product: '', // Can include YouTube URL
+    benefits: [ { benefit_title: '', benefit_description: '' } ]
+  });
 
   useEffect(() => {
     dispatch(fetchCategories());
     dispatch(fetchProductById(productId));
+    dispatch(fetchProductAttributes(productId)); // load existing attributes if route exists
     dispatch(getAllTags());
 
     return () => {
@@ -62,6 +70,42 @@ export default function EditProductPage() {
       setLoading(false);
     }
   }, [selectedProduct]);
+
+  // Populate attributes form when fetched
+  useEffect(() => {
+    if (productAttributes) {
+      let benefitsParsed = [];
+      if (Array.isArray(productAttributes.benefits)) {
+        benefitsParsed = productAttributes.benefits;
+      } else if (typeof productAttributes.benefits === 'string') {
+        try { benefitsParsed = JSON.parse(productAttributes.benefits); } catch { benefitsParsed = []; }
+      }
+      // Normalize to object array
+      benefitsParsed = benefitsParsed.map(b => (
+        typeof b === 'object' && b !== null
+          ? { benefit_title: b.benefit_title || '', benefit_description: b.benefit_description || '' }
+          : { benefit_title: String(b || ''), benefit_description: '' }
+      ));
+      if (!benefitsParsed.length) benefitsParsed = [{ benefit_title: '', benefit_description: '' }];
+      setAttributesForm({
+        key_ingredients: productAttributes.key_ingredients || '',
+        know_about_product: productAttributes.know_about_product || '',
+        benefits: benefitsParsed
+      });
+    }
+  }, [productAttributes]);
+
+  const handleAttrField = (field, value) => {
+    setAttributesForm(prev => ({ ...prev, [field]: value }));
+  };
+  const handleBenefitChange = (idx, field, value) => {
+    setAttributesForm(prev => {
+      const arr = prev.benefits.map((b, i) => i === idx ? { ...b, [field]: value } : b);
+      return { ...prev, benefits: arr };
+    });
+  };
+  const addBenefit = () => setAttributesForm(prev => ({ ...prev, benefits: [...prev.benefits, { benefit_title: '', benefit_description: '' }] }));
+  const removeBenefit = (idx) => setAttributesForm(prev => ({ ...prev, benefits: prev.benefits.filter((_, i) => i !== idx) }));
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -141,6 +185,29 @@ export default function EditProductPage() {
         id: productId,
         productData: formData
       })).unwrap();
+
+      // Upsert attributes
+      const cleanBenefits = attributesForm.benefits.filter(b => (b.benefit_title.trim() || b.benefit_description.trim()));
+      const hasAny = attributesForm.key_ingredients.trim() || attributesForm.know_about_product.trim() || cleanBenefits.length;
+      if (hasAny) {
+        if (productAttributes && productAttributes.attribute_id) {
+          await dispatch(updateProductAttributes({
+            attribute_id: productAttributes.attribute_id,
+            data: {
+              key_ingredients: attributesForm.key_ingredients,
+              know_about_product: attributesForm.know_about_product,
+              benefits: cleanBenefits
+            }
+          })).unwrap();
+        } else {
+          await dispatch(createProductAttributes({
+            product_id: productId,
+            key_ingredients: attributesForm.key_ingredients,
+            know_about_product: attributesForm.know_about_product,
+            benefits: cleanBenefits
+          })).unwrap();
+        }
+      }
 
       // Delete removed images
       for (const imageId of deletedImages) {
@@ -304,6 +371,75 @@ export default function EditProductPage() {
               <label className="ml-2 text-sm font-medium text-gray-700">
                 Active Product
               </label>
+            </div>
+          </div>
+
+          {/* Additional Information */}
+          <div className="card">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">Additional Information</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Key Ingredients</label>
+                <textarea
+                  rows={3}
+                  value={attributesForm.key_ingredients}
+                  onChange={(e) => handleAttrField('key_ingredients', e.target.value)}
+                  className="input-field"
+                  placeholder="e.g., Aloe Vera, Vitamin C"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Know About Product (YouTube URL allowed)</label>
+                <textarea
+                  rows={3}
+                  value={attributesForm.know_about_product}
+                  onChange={(e) => handleAttrField('know_about_product', e.target.value)}
+                  className="input-field"
+                  placeholder="Brief info customers should know. Include a YouTube URL if desired."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Benefits</label>
+                <div className="space-y-2">
+                  {attributesForm.benefits.map((b, idx) => (
+                    <div key={idx} className="grid grid-cols-1 md:grid-cols-5 gap-2 p-2 border rounded">
+                      <div className="md:col-span-2">
+                        <input
+                          type="text"
+                          value={b.benefit_title}
+                          onChange={(e) => handleBenefitChange(idx, 'benefit_title', e.target.value)}
+                          className="input-field"
+                          placeholder="Benefit Title"
+                        />
+                      </div>
+                      <div className="md:col-span-3 flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={b.benefit_description}
+                          onChange={(e) => handleBenefitChange(idx, 'benefit_description', e.target.value)}
+                          className="input-field flex-1"
+                          placeholder="Benefit Description"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeBenefit(idx)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded"
+                          disabled={attributesForm.benefits.length === 1}
+                        >
+                          <TrashIcon className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addBenefit}
+                    className="btn-secondary flex items-center gap-2 text-sm"
+                  >
+                    <PlusIcon className="w-4 h-4" /> Add Benefit
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 

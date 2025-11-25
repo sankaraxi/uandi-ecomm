@@ -114,7 +114,11 @@ app.use("/orders",orderRoutes)
 
 app.use("/address",addressesRoutes)
 
+const shippingRoutes = require('./routes/shippingRoutes');
+app.use('/shipping', shippingRoutes);
 
+const customerRoutes = require('./routes/customerRoutes');
+app.use('/customers', customerRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

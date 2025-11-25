@@ -32,6 +32,11 @@ router.post('/upload-media', productController.uploadProductMedia);
 router.post('/replace-single-video', productController.replaceSingleVideo);
 router.post('/replace-single-image', productController.replaceSingleImage);
 
+// Product Attributes routes
+router.post('/:id/attributes', productController.createProductAttributes);
+router.put('/attributes/:attribute_id', productController.updateProductAttributes);
+router.delete('/attributes/:attribute_id', productController.deleteProductAttributes);
+
 
 
 

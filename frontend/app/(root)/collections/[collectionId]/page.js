@@ -52,6 +52,9 @@ export default function Page() {
     const collectionData = selectedCollection?.collection;
     const products = selectedCollection?.products || [];
 
+    console.log("Collection Data:", collectionData);
+    console.log("Products:", products);
+
     useEffect(() => {
         if (collectionId) {
             dispatch(getCollectionProducts(collectionId));
@@ -150,7 +153,7 @@ export default function Page() {
                         >
                             {/* Clickable Image + Product Info */}
                             <Link
-                                href={`/product/${product.product_id}`}
+                                href={`/products/${product.product_id}`}
                                 className="flex-1 cursor-pointer"
                             >
                                 {/* IMAGE */}

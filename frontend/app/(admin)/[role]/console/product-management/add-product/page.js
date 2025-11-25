@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useRouter } from 'next/navigation';
 import { createProduct, getAllTags } from '@/store/productsSlice';
+import { createProductAttributes } from '@/store/productAttributesSlice';
 import { fetchCategories } from '@/store/categoriesSlice';
 import Swal from 'sweetalert2';
 import { PlusIcon, TrashIcon, PhotoIcon, VideoCameraIcon } from '@heroicons/react/24/outline';
@@ -25,6 +26,15 @@ export default function AddProductPage() {
     tag_id: '',
     description: '',
     is_active: true
+  });
+
+  // Additional Information (attributes)
+  const [attributes, setAttributes] = useState({
+    key_ingredients: '',
+    know_about_product: '', // Can include YouTube URL
+    benefits: [
+      { benefit_title: '', benefit_description: '' }
+    ]
   });
 
   // Variants with file objects for images and video
@@ -206,6 +216,19 @@ export default function AddProductPage() {
     e.target.value = '';
   };
 
+  // Attribute helpers
+  const handleAttributeField = (field, value) => {
+    setAttributes(prev => ({ ...prev, [field]: value }));
+  };
+  const handleBenefitChange = (idx, field, value) => {
+    setAttributes(prev => {
+      const arr = prev.benefits.map((b, i) => i === idx ? { ...b, [field]: value } : b);
+      return { ...prev, benefits: arr };
+    });
+  };
+  const addBenefit = () => setAttributes(prev => ({ ...prev, benefits: [...prev.benefits, { benefit_title: '', benefit_description: '' }] }));
+  const removeBenefit = (idx) => setAttributes(prev => ({ ...prev, benefits: prev.benefits.filter((_, i) => i !== idx) }));
+
   // Remove video
   const removeVideo = (vIndex) => {
     setVariants(vs => vs.map((v, i) => {
@@ -290,6 +313,22 @@ export default function AddProductPage() {
       // Create product
       const productResult = await dispatch(createProduct(formData)).unwrap();
       const productId = productResult.data.product_id;
+
+      // Persist attributes (ignore if all empty)
+      const benefitsClean = attributes.benefits.filter(b => (b.benefit_title.trim() || b.benefit_description.trim()));
+      const hasAnyAttr = attributes.key_ingredients.trim() || attributes.know_about_product.trim() || benefitsClean.length;
+      if (hasAnyAttr) {
+        try {
+          await dispatch(createProductAttributes({
+            product_id: productId,
+            key_ingredients: attributes.key_ingredients,
+            know_about_product: attributes.know_about_product,
+            benefits: benefitsClean
+          })).unwrap();
+        } catch (attrErr) {
+          console.warn('Attribute create failed:', attrErr);
+        }
+      }
 
       // Create variants with media
       for (let vIndex = 0; vIndex < variants.length; vIndex++) {
@@ -496,6 +535,80 @@ export default function AddProductPage() {
             <label className="ml-2 text-sm font-medium text-gray-700">
               Active Product
             </label>
+          </div>
+        </div>
+
+        {/* Additional Information */}
+        <div className="card">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">Additional Information</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Key Ingredients</label>
+              <textarea
+                rows={3}
+                value={attributes.key_ingredients}
+                onChange={(e) => handleAttributeField('key_ingredients', e.target.value)}
+                className="input-field"
+                placeholder="e.g., Aloe Vera, Vitamin C"
+                disabled={uploading}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Know About Product (YouTube URL allowed)</label>
+              <textarea
+                rows={3}
+                value={attributes.know_about_product}
+                onChange={(e) => handleAttributeField('know_about_product', e.target.value)}
+                className="input-field"
+                placeholder="Brief info customers should know. Include a YouTube URL if desired."
+                disabled={uploading}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Benefits</label>
+              <div className="space-y-2">
+                {attributes.benefits.map((b, idx) => (
+                  <div key={idx} className="grid grid-cols-1 md:grid-cols-5 gap-2 p-2 border rounded">
+                    <div className="md:col-span-2">
+                      <input
+                        type="text"
+                        value={b.benefit_title}
+                        onChange={(e) => handleBenefitChange(idx, 'benefit_title', e.target.value)}
+                        className="input-field"
+                        placeholder="Benefit Title"
+                        disabled={uploading}
+                      />
+                    </div>
+                    <div className="md:col-span-3 flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={b.benefit_description}
+                        onChange={(e) => handleBenefitChange(idx, 'benefit_description', e.target.value)}
+                        className="input-field flex-1"
+                        placeholder="Benefit Description"
+                        disabled={uploading}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeBenefit(idx)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded"
+                        disabled={uploading || attributes.benefits.length === 1}
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={addBenefit}
+                  className="btn-secondary flex items-center gap-2 text-sm"
+                  disabled={uploading}
+                >
+                  <PlusIcon className="w-4 h-4" /> Add Benefit
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 

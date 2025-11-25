@@ -294,34 +294,35 @@ export default function Sidebar() {
         { name: "All Products", icon: List, href: `${base}/console/product-management/all-products` },
         { name: "Add Product", icon: Package, href: `${base}/console/product-management/add-product` },
         { name: "Categories", icon: Grid, href: `${base}/console/product-management/categories` },
-      ],
-    },
-
-    {
-      name: "Orders",
-      icon: ShoppingBag,
-      href: `${base}/console/order-management`,
-      subItems: [
-        { name: "All Orders", icon: List, href: `${base}/console/order-management/all` },
-        { name: "Pending Orders", icon: Package, href: `${base}/console/order-management/pending` },
+        { name: "Reviews", icon: Tag, href: `${base}/console/product-management/reviews` },
       ],
     },
 
     // ⭐ DYNAMIC COLLECTIONS MENU (kept from new sidebar)
+
     {
-      name: "Collections",
-      icon: Layers,
-      href: `${base}/console/collection-management/collections`,
-      subItems: [
-        ...(collections?.length > 0
-          ? collections.map((col) => ({
-              name: col.collection_name,
-              icon: Folder,
-              href: `${base}/console/collection-management/collections/${col.collection_id}`,
-            }))
-          : []),
-      ],
+    name: "Collections",
+    icon: Layers,
+    href: `${base}/console/collection-management/collections`,
+    subItems: [
+      ...(collections?.length > 0
+        ? collections.map((col) => ({
+            name: col.collection_name,
+            icon: Folder,
+            href: `${base}/console/collection-management/collections/${col.collection_id}`,
+          }))
+        : []),
+    ],
+  },
+
+    {
+      name: "Orders",
+      icon: ShoppingBag,
+      href: `${base}/console/order-management`
     },
+
+    
+  
 
     // ✅ Routes from OLD sidebar
     { name: "Customers", icon: Users, href: `${base}/console/customer-management` },

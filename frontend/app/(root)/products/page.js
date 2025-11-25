@@ -197,19 +197,19 @@ export default function AllProductsPage() {
                         </Link>
                     </div>
 
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    {/* <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                         <div>
                             <h1 className="text-3xl font-light text-gray-900 tracking-tight">Our Collection</h1>
                             <p className="text-gray-500 mt-2">
                                 Discover {activeProducts} curated products
                             </p>
-                        </div>
+                        </div> */}
 
                         {/* Results Count */}
-                        <div className="text-sm text-gray-600">
+                        {/* <div className="text-sm text-gray-600">
                             Showing {sortedProducts.length} of {activeProducts} products
                         </div>
-                    </div>
+                    </div> */}
                 </div>
 
                 {/* 🎯 Professional Filters Section */}

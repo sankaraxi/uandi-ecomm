@@ -2,6 +2,7 @@
 
 
 const productModel = require('../models/productModel');
+const productAttributesModel = require('../models/productsAttributesModel');
 const pool = require('../config/database');
 
 const Busboy = require('busboy');
@@ -491,8 +492,11 @@ const productController = {
       const productsMap = new Map();
 
       rows.forEach(row => {
-        // Create product if not already in map
         if (!productsMap.has(row.product_id)) {
+          let parsedBenefits = null;
+          if (row.benefits) {
+            try { parsedBenefits = JSON.parse(row.benefits); } catch { parsedBenefits = row.benefits; }
+          }
           productsMap.set(row.product_id, {
             product_id: row.product_id,
             product_name: row.product_name,
@@ -500,15 +504,18 @@ const productController = {
             is_active: row.is_active,
             created_at: row.created_at,
             updated_at: row.updated_at,
+            tag: row.tag_name ? { tag_name: row.tag_name } : null,
+            key_ingredients: row.key_ingredients || null,
+            know_about_product: row.know_about_product || null,
+            benefits: parsedBenefits,
             category: {
               category_id: row.category_id,
               category_name: row.category_name
             },
-            main_image: row.image_url || null, // keep as is
+            main_image: null,
             variants: []
           });
         }
-
         const product = productsMap.get(row.product_id);
 
         // Handle variants
@@ -540,14 +547,28 @@ const productController = {
               variant.images.push({
                 image_id: row.image_id,
                 image_url: row.image_url,
-                is_main: row.is_main
+                is_main: row.is_main,
+                is_video: row.is_video
               });
+            }
+            // assign main_image if flagged as main and not set yet
+            if (row.is_main && row.image_url && !product.main_image) {
+              product.main_image = row.image_url;
             }
           }
         }
       });
 
-      const products = Array.from(productsMap.values());
+      const products = Array.from(productsMap.values()).map(p => {
+        if (!p.main_image) {
+          const firstVariant = p.variants[0];
+            if (firstVariant) {
+              const firstImg = firstVariant.images.find(img => !img.is_video);
+              if (firstImg) p.main_image = firstImg.image_url;
+            }
+        }
+        return p;
+      });
       res.json({ success: true, data: products });
     } catch (error) {
       console.error("Error in getAllProducts:", error);
@@ -691,6 +712,35 @@ const productController = {
   uploadProductMedia,
  replaceSingleImage,
  replaceSingleVideo,
+ createProductAttributes: async (req, res) => {
+  try {
+    const result = await productAttributesModel.create(req.body);
+    res.json({ success: true, attribute_id: result.insertId });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+},
+updateProductAttributes: async (req, res) => {
+  try {
+    const attribute_id = req.params.attribute_id;
+    await productAttributesModel.update(attribute_id, req.body);
+
+    res.json({ success: true, message: "Attributes updated" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+},
+deleteProductAttributes: async (req, res) => {
+  try {
+    await productAttributesModel.delete(req.params.attribute_id);
+    res.json({ success: true, message: "Attributes deleted" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+},
 };
+
+
 
 module.exports = productController;
