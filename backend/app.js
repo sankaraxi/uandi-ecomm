@@ -109,10 +109,12 @@ app.use('/coupons', couponRoutes);
 const cartRoutes = require('./routes/cartRoutes');
 const orderRoutes = require("./routes/orderRoutes");
 const addressesRoutes = require("./routes/addressRoutes");
+const paymentRoutes = require('./routes/paymentRoutes');
 app.use('/cart', cartRoutes);
 app.use("/orders",orderRoutes)
 
 app.use("/address",addressesRoutes)
+app.use('/payments', paymentRoutes);
 
 const shippingRoutes = require('./routes/shippingRoutes');
 app.use('/shipping', shippingRoutes);

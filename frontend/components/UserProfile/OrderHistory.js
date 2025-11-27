@@ -97,7 +97,7 @@ export default function OrderHistory() {
 
   if (loading) {
     return (
-      <div className="min-h-[40vh] bg-gray-50 flex items-center justify-center rounded-2xl">
+      <div className="min-h-[40vh] flex items-center justify-center rounded-2xl">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading your orders...</p>
@@ -125,7 +125,7 @@ export default function OrderHistory() {
   }
 
   return (
-    <main className="bg-gray-50 rounded-2xl py-6">
+    <main className=" rounded-2xl py-6">
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div className="text-center md:text-left mb-4 md:mb-0">
@@ -202,7 +202,7 @@ export default function OrderHistory() {
                       </div>
 
                       <div className="flex flex-wrap gap-4 items-center">
-                        <div className="text-center">
+                        <div className="text-left lg:text-center">
                           <p className="text-xs font-medium text-gray-500">Order Date</p>
                           <p className="text-gray-900 flex items-center gap-1">
                             <Calendar className="w-4 h-4" />
@@ -210,7 +210,7 @@ export default function OrderHistory() {
                           </p>
                         </div>
 
-                        <div className="text-center">
+                        <div className="text-left lg:text-center">
                           <p className="text-xs font-medium text-gray-500">Payment</p>
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-semibold ${
@@ -223,7 +223,7 @@ export default function OrderHistory() {
                           </span>
                         </div>
 
-                        <div className="text-right">
+                        <div className="text-left lg:text-right">
                           <p className="text-xs font-medium text-gray-500">Total Amount</p>
                           <p className="text-lg font-bold text-gray-900">₹{order.total_amount}</p>
                         </div>
@@ -288,22 +288,22 @@ export default function OrderHistory() {
                             {order.items?.map((item, idx) => (
                               <div
                                 key={idx}
-                                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                                className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-gray-50 rounded-lg"
                               >
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-start gap-3 sm:gap-4 w-full sm:w-auto">
                                   {item.main_image ? (
                                     <img
                                       src={item.main_image}
                                       alt={item.product_name}
-                                      className="w-16 h-16 object-cover rounded-lg"
+                                      className="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-lg shrink-0"
                                     />
                                   ) : (
-                                    <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
+                                    <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gray-200 rounded-lg flex items-center justify-center shrink-0">
                                       <Package className="w-6 h-6 text-gray-400" />
                                     </div>
                                   )}
-                                  <div>
-                                    <p className="font-medium text-gray-900">
+                                  <div className="min-w-0">
+                                    <p className="font-medium text-gray-900 wrap-break-word">
                                       {item.product_name || `Product #${item.product_id}`}
                                     </p>
                                     {item.variant_name && (
@@ -317,7 +317,7 @@ export default function OrderHistory() {
                                     )}
                                   </div>
                                 </div>
-                                <div className="text-right">
+                                <div className="text-left sm:text-right w-full sm:w-auto">
                                   <p className="font-semibold text-gray-900">₹{item.sub_total}</p>
                                   {item.source_collection_id && (
                                     <p className="text-xs text-gray-500 mt-1">Collection Item</p>

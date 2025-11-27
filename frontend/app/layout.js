@@ -16,9 +16,14 @@ const geistMono = Geist_Mono({
 
 // Metadata
 export const metadata = {
-  title: "U&I Store",
-  description: "Shop your favorites effortlessly",
+  title: 'U&I Naturals',
+  icons: {
+    icon: '/favicon.svg', // your SVG favicon path
+    // shortcut: '/favicon.ico',
+    // apple: '/apple-touch-icon.png',
+  },
 };
+
 
 // Root Layout
 export default function RootLayout({ children }) {

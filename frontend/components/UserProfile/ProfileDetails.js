@@ -135,7 +135,7 @@ export default function ProfileDetails() {
               <div className="relative group">
                 <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-gray-200">
                   <img 
-                    src={previewUrl || profile?.profile_picture_url || `https://i.pravatar.cc/300?u=${profile?.email}`} 
+                    src={previewUrl || profile?.profile_picture_url} 
                     alt="Profile" 
                     className="w-full h-full object-cover"
                   />

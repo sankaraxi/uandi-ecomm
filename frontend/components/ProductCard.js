@@ -30,18 +30,23 @@ export default function ProductCard({
   );
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
 
-  // Price & stock
-  const lowestPrice = product.variants?.length > 0
-    ? Math.min(...product.variants.map(v => parseFloat(v.final_price || v.price || 0)))
-    : 0;
-  const totalStock = product.variants?.reduce((sum, v) => sum + (v.stock || 0), 0) || 0;
+  // Price & stock (use only variants with a valid positive price)
+  const pricedVariants = (product.variants || []).filter(v => {
+    const val = parseFloat(v.final_price || v.price || 0);
+    return !isNaN(val) && val > 0;
+  });
+  const lowestPrice = pricedVariants.length > 0
+    ? Math.min(...pricedVariants.map(v => parseFloat(v.final_price || v.price || 0)))
+    : null;
+  const totalStock = pricedVariants.reduce((sum, v) => sum + (v.stock || 0), 0);
+  const isAddDisabled = totalStock === 0 || !pricedVariants.length;
 
   // Add to Cart logic
   const handleAddToCart = (e) => {
     e.stopPropagation();
     if (totalStock === 0) return;
-    if (!product.variants || product.variants.length === 0) return;
-    const lowestVariant = product.variants.reduce((lowest, current) => {
+    if (!pricedVariants.length) return;
+    const lowestVariant = pricedVariants.reduce((lowest, current) => {
       const lowP = parseFloat(lowest.final_price || lowest.price || 0);
       const curP = parseFloat(current.final_price || current.price || 0);
       return curP < lowP ? current : lowest;
@@ -155,23 +160,24 @@ export default function ProductCard({
         <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">
           {product.category?.category_name || 'Uncategorized'}
         </p>
-        <h3 className="font-medium text-gray-900 line-clamp-2 mb-3 group-hover:text-gray-700 transition-colors">
+        <h3 className="font-medium text-gray-900 line-clamp-2 mb-2 group-hover:text-gray-700 transition-colors">
           {product.product_name}
         </h3>
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-xl font-light text-gray-900">₹{lowestPrice.toFixed(2)}</span>
-          {product.variants?.length > 1 && (
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xl font-light text-gray-900">{lowestPrice !== null ? `₹${lowestPrice.toFixed(2)}` : 'Not available'}</span>
+          {/* {pricedVariants.length > 1 && (
             <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-              {product.variants.length} Variants
+              {pricedVariants.length} Variants
             </span>
-          )}
+          )} */}
         </div>
         <button
-          className="w-full py-3 px-4 text-sm font-medium text-gray-900 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={totalStock === 0}
+          className={`w-full py-3 cursor-pointer px-4 text-sm font-medium rounded-xl transition-all duration-200 ${isAddDisabled ? 'opacity-60 cursor-not-allowed' : 'hover:shadow-md'}`}
+          style={isAddDisabled ? { backgroundColor: '#f3f4f6', color: '#6b7280' } : { backgroundImage: 'linear-gradient(to right, #D8234B, #FFD3D5)', color: '#ffffff' }}
+          disabled={isAddDisabled}
           onClick={handleAddToCart}
         >
-          {totalStock === 0 ? 'Out of Stock' : 'Add to Cart'}
+          {totalStock === 0 ? 'Out of Stock' : !pricedVariants.length ? 'No Variants' : 'Add to Cart'}
         </button>
       </div>
     </motion.div>

@@ -150,7 +150,7 @@ export default function DeliveryAddress() {
   };
 
   return (
-    <div className="p-6 bg-gray-50 rounded-xl">
+    <div className="p-6  rounded-xl">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold text-gray-800">Delivery Addresses</h2>
         {isAuthenticated && (

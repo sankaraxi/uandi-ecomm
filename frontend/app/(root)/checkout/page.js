@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios";
 import {
     MapPin, Phone, User, ArrowRight, Tag, X,
     Plus, Shield, CheckCircle2,
@@ -16,8 +17,8 @@ import {
     updateAddress,
     deleteAddress,
 } from "@/store/slices/addressSlice";
-import {validateCoupon,removeCoupon} from "@/store/couponSlice";
-import { createOrder } from "@/store/ordersSlice";
+import { validateCoupon, removeCoupon } from "@/store/couponSlice";
+import { completeOrderAfterPayment } from "@/store/ordersSlice";
 import { clearCart } from "@/store/slices/cartSlice";
 import Swal from "sweetalert2";
 import AvailableCoupons from "@/components/AvailableCoupons";
@@ -29,6 +30,8 @@ const getErrorMessage = (error) => {
     if (error?.data?.message) return error.data.message;
     return 'An unexpected error occurred';
 };
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export default function Page() {
     const dispatch = useDispatch();
@@ -63,6 +66,10 @@ export default function Page() {
     const [currentStep, setCurrentStep] = useState(1);
     const [savingAddress, setSavingAddress] = useState(false);
     const [isEmptyCart, setIsEmptyCart] = useState(false); // New state for empty cart
+    const [razorpayReady, setRazorpayReady] = useState(false);
+    const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
+
+    const buttonLoading = orderCreating || isPaymentProcessing;
 
     const subtotal = items?.reduce((acc, item) => acc + (item.price || 0) * (item.quantity || 0), 0) || 0;
     const shipping = 99;
@@ -72,7 +79,7 @@ export default function Page() {
     const steps = [
         { number: 1, title: 'Delivery', completed: currentStep > 1 },
         { number: 2, title: 'Review', completed: currentStep > 2 },
-        { number: 3, title: 'Payment', completed: false }
+        { number: 3, title: 'Payment', completed: currentStep > 3 }
     ];
 
     // Check for empty cart - moved inside useEffect
@@ -83,6 +90,38 @@ export default function Page() {
             setIsEmptyCart(false);
         }
     }, [items]);
+
+    useEffect(() => {
+        const scriptSrc = 'https://checkout.razorpay.com/v1/checkout.js';
+        const existingScript = document.querySelector(`script[src="${scriptSrc}"]`);
+
+        const handleLoad = () => setRazorpayReady(true);
+        const handleError = () => setRazorpayReady(false);
+
+        if (existingScript) {
+            if (window.Razorpay) {
+                setRazorpayReady(true);
+            }
+            existingScript.addEventListener('load', handleLoad);
+            existingScript.addEventListener('error', handleError);
+            return () => {
+                existingScript.removeEventListener('load', handleLoad);
+                existingScript.removeEventListener('error', handleError);
+            };
+        }
+
+        const script = document.createElement('script');
+        script.src = scriptSrc;
+        script.async = true;
+        script.onload = handleLoad;
+        script.onerror = handleError;
+        document.body.appendChild(script);
+
+        return () => {
+            script.onload = null;
+            script.onerror = null;
+        };
+    }, []);
 
     useEffect(() => {
         let u = authState.user;
@@ -328,7 +367,6 @@ export default function Page() {
             return;
         }
 
-        // Validate cart items
         if (items.some(item => !item.product_id || !item.variant_id || item.quantity <= 0)) {
             Swal.fire({
                 toast: true,
@@ -344,11 +382,28 @@ export default function Page() {
             return;
         }
 
-        const orderData = {
+        if (!razorpayReady || typeof window === 'undefined' || !window.Razorpay) {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                icon: 'error',
+                title: 'Payment Unavailable',
+                text: 'Payment gateway is not ready. Please refresh and try again.',
+                background: '#fee2e2',
+                color: '#991b1b'
+            });
+            return;
+        }
+
+        const payableAmount = Number(total.toFixed(2));
+
+        const baseOrderData = {
             user_id: localUser.user_id,
             address_id: selectedAddress.address_id,
-            total_amount: total,
-            payment_method: 'UPI',
+            total_amount: payableAmount,
+            payment_method: 'Razorpay',
             payment_status: 'Pending',
             order_status: 'Processing',
             coupon_id: appliedCoupon?.coupon_id || null,
@@ -369,36 +424,119 @@ export default function Page() {
         }));
 
         try {
-            const result = await dispatch(createOrder({ orderData, orderItems })).unwrap();
+            setIsPaymentProcessing(true);
 
-            if (result.success) {
-                const checkoutData = {
-                    order_id: result.order.order_id,
-                    address: selectedAddress,
-                    cartItems: items,
-                    coupon: appliedCoupon,
-                    discount: discount || 0,
-                    totals: { subtotal, shipping, tax, total, discount: discount || 0 }
-                };
+            const { data } = await axios.post(`${API_URL}/payments/create-order`, {
+                amount: payableAmount,
+                currency: 'INR',
+                notes: {
+                    user_id: localUser.user_id,
+                    address_id: selectedAddress.address_id
+                }
+            });
 
-                localStorage.setItem('checkoutData', JSON.stringify(checkoutData));
-
-                // Clear cart after successful order creation
-                dispatch(clearCart());
-
-                console.log('✅ Order created successfully:', result.order);
-                // router.push('/checkout/payment');
+            if (!data?.success || !data?.order?.id || !data?.key) {
+                throw new Error(data?.message || 'Failed to initialize payment gateway.');
             }
-        } catch (error) {
-            console.error('❌ Error creating order:', error);
-            const errorMessage = getErrorMessage(error) || 'Failed to create order. Please try again.';
 
+            const options = {
+                key: data.key,
+                amount: data.order.amount,
+                currency: data.order.currency,
+                name: 'U & I',
+                description: 'Order Payment',
+                order_id: data.order.id,
+                prefill: {
+                    name: selectedAddress.full_name,
+                    email: localUser.email || localUser.email_id || localUser.user_email || '',
+                    contact: selectedAddress.phone_number
+                },
+                notes: {
+                    address_id: selectedAddress.address_id
+                },
+                theme: { color: '#2563eb' },
+                modal: {
+                    ondismiss: () => setIsPaymentProcessing(false)
+                },
+                handler: async (response) => {
+                    try {
+                        const verificationPayload = {
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_signature: response.razorpay_signature,
+                            orderData: {
+                                ...baseOrderData,
+                                payment_status: 'Paid'
+                            },
+                            orderItems
+                        };
+
+                        const result = await dispatch(completeOrderAfterPayment(verificationPayload)).unwrap();
+
+                        if (result.success) {
+                            const checkoutData = {
+                                order_id: result.order.order_id,
+                                order_number: result.order.order_number,
+                                address: selectedAddress,
+                                cartItems: items,
+                                coupon: appliedCoupon,
+                                discount: discount || 0,
+                                totals: { subtotal, shipping, tax, total: payableAmount, discount: discount || 0 }
+                            };
+
+                            localStorage.setItem('checkoutData', JSON.stringify(checkoutData));
+
+                            dispatch(clearCart());
+                            dispatch(removeCoupon());
+                            setCurrentStep(3);
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Payment Successful',
+                                text: 'Your payment was successful and the order is now processing.',
+                                confirmButtonColor: '#22c55e'
+                            });
+
+                            router.push('/orders');
+                        }
+                    } catch (error) {
+                        console.error('Payment verification failed:', error);
+                        const errorMessage = getErrorMessage(error) || 'Payment verification failed. Please contact support.';
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Payment Verification Failed',
+                            text: errorMessage,
+                            confirmButtonColor: '#ef4444'
+                        });
+                    } finally {
+                        setIsPaymentProcessing(false);
+                    }
+                }
+            };
+
+            const razorpay = new window.Razorpay(options);
+
+            razorpay.on('payment.failed', (response) => {
+                setIsPaymentProcessing(false);
+                const errorDescription = response?.error?.description || 'Payment failed. Please try again.';
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Payment Failed',
+                    text: errorDescription,
+                    confirmButtonColor: '#ef4444'
+                });
+            });
+
+            razorpay.open();
+        } catch (error) {
+            console.error('Error initiating payment:', error);
+            setIsPaymentProcessing(false);
+            const errorMessage = getErrorMessage(error) || 'Failed to initiate payment. Please try again.';
             Swal.fire({
-                title: 'Order Creation Failed',
-                text: errorMessage,
                 icon: 'error',
-                confirmButtonColor: '#ec4899',
-                confirmButtonText: 'OK'
+                title: 'Payment Error',
+                text: errorMessage,
+                confirmButtonColor: '#ef4444'
             });
         }
     };
@@ -697,13 +835,13 @@ export default function Page() {
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
                                             onClick={handleProceedToPayment}
-                                            disabled={orderCreating}
+                                            disabled={buttonLoading}
                                             className="flex-1 bg-blue-600 text-white py-4 rounded-xl font-semibold hover:bg-blue-700 disabled:bg-gray-400 transition-colors duration-200 flex items-center justify-center gap-2"
                                         >
-                                            {orderCreating ? (
+                                            {buttonLoading ? (
                                                 <>
                                                     <div className="w-5 h-5 border-2 border-white/50 border-t-white rounded-full animate-spin" />
-                                                    Creating Order...
+                                                    Processing Payment...
                                                 </>
                                             ) : (
                                                 <>

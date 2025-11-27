@@ -20,6 +20,19 @@ export const createOrder = createAsyncThunk(
     }
 );
 
+// Complete order after successful payment
+export const completeOrderAfterPayment = createAsyncThunk(
+    'order/completeOrderAfterPayment',
+    async (payload, { rejectWithValue }) => {
+        try {
+            const response = await axios.post(`${API_URL}/payments/verify`, payload);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data || { message: 'Failed to verify payment' });
+        }
+    }
+);
+
 // Get order by ID
 export const getOrderById = createAsyncThunk(
     'order/getOrderById',
@@ -103,6 +116,20 @@ const orderSlice = createSlice({
             .addCase(createOrder.rejected, (state, action) => {
                 state.creating = false;
                 state.createError = action.payload?.message || 'Failed to create order';
+            })
+            // Complete Order After Payment
+            .addCase(completeOrderAfterPayment.pending, (state) => {
+                state.creating = true;
+                state.createError = null;
+            })
+            .addCase(completeOrderAfterPayment.fulfilled, (state, action) => {
+                state.creating = false;
+                state.currentOrder = action.payload.order;
+                state.createError = null;
+            })
+            .addCase(completeOrderAfterPayment.rejected, (state, action) => {
+                state.creating = false;
+                state.createError = action.payload?.message || 'Failed to verify payment';
             })
             // Get Order by ID
             .addCase(getOrderById.pending, (state) => {

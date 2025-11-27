@@ -74,13 +74,12 @@ const collectionModel = {
                 `SELECT * FROM collections WHERE collection_id = ?`,
                 [collection_id]
             );
-
             if (collectionRows.length === 0) {
                 throw new Error("Collection not found");
             }
 
-            // 2️⃣ Get products with main_image and variants in one query
-            const [products] = await pool.query(
+            // 2️⃣ Fetch products + variants + main image + category
+            const [productsRaw] = await pool.query(
                 `SELECT
                      cp.product_id,
                      cp.sort_order,
@@ -88,23 +87,24 @@ const collectionModel = {
                      p.description,
                      p.is_active,
                      img.image_url AS main_image,
-                     -- Variant data
+                     c.category_name,
                      v.variant_id,
                      v.variant_name,
-                     v.price as variant_price,
+                     v.price AS variant_price,
                      v.final_price,
                      v.stock
                  FROM collection_products cp
-                          INNER JOIN products p ON cp.product_id = p.product_id
-                          LEFT JOIN product_images img ON img.product_id = p.product_id AND img.is_main = 1
-                          LEFT JOIN variants v ON p.product_id = v.product_id  -- Removed v.is_active check
-                 WHERE cp.collection_id = ? AND p.is_active = 1  -- Only check products.is_active
+                     INNER JOIN products p ON cp.product_id = p.product_id
+                     LEFT JOIN categories c ON p.category_id = c.category_id
+                     LEFT JOIN product_images img ON img.product_id = p.product_id AND img.is_main = 1
+                     LEFT JOIN variants v ON p.product_id = v.product_id
+                 WHERE cp.collection_id = ? AND p.is_active = 1
                  ORDER BY cp.sort_order ASC, p.product_id ASC, v.variant_id ASC`,
                 [collection_id]
             );
 
-            // 3️⃣ Group variants by product
-            const groupedProducts = products.reduce((acc, row) => {
+            // 3️⃣ Group variants per product
+            const groupedProducts = productsRaw.reduce((acc, row) => {
                 const {
                     product_id,
                     product_name,
@@ -112,7 +112,7 @@ const collectionModel = {
                     main_image,
                     is_active,
                     sort_order,
-                    // Variant fields
+                    category_name,
                     variant_id,
                     variant_name,
                     variant_price,
@@ -120,43 +120,65 @@ const collectionModel = {
                     stock
                 } = row;
 
-                // Find existing product
                 let product = acc.find(p => p.product_id === product_id);
-
                 if (!product) {
-                    // Create new product entry
                     product = {
                         product_id,
                         product_name,
                         description,
-                        main_image, // From product_images table
+                        main_image,
                         is_active,
                         sort_order,
+                        category: category_name ? { category_name } : null,
                         variants: []
                     };
                     acc.push(product);
                 }
-
-                // Add variant if it exists
                 if (variant_id) {
                     product.variants.push({
                         variant_id,
                         variant_name,
                         price: variant_price,
                         final_price,
-                        stock
+                        stock,
+                        images: [] // will be filled later
                     });
                 }
-
                 return acc;
             }, []);
+
+            // 4️⃣ Collect all variant IDs for image fetch
+            const allVariantIds = groupedProducts.flatMap(p => p.variants.map(v => v.variant_id));
+            if (allVariantIds.length > 0) {
+                const [variantImages] = await pool.query(
+                    `SELECT image_id, image_url, is_main, is_video, variant_id, product_id
+                     FROM product_images
+                     WHERE variant_id IN (${allVariantIds.map(() => '?').join(',')})
+                     ORDER BY image_id ASC`,
+                    allVariantIds
+                );
+
+                // 5️⃣ Attach images to matching variants
+                groupedProducts.forEach(prod => {
+                    prod.variants.forEach(variant => {
+                        const imgs = variantImages.filter(img => img.variant_id === variant.variant_id && !img.is_video);
+                        variant.images = imgs.map(i => ({ image_url: i.image_url }));
+                    });
+                    // Ensure first variant has at least main_image
+                    if (prod.variants[0] && prod.main_image) {
+                        const hasMain = prod.variants[0].images.some(img => img.image_url === prod.main_image);
+                        if (!hasMain) {
+                            prod.variants[0].images.unshift({ image_url: prod.main_image });
+                        }
+                    }
+                });
+            }
 
             return {
                 success: true,
                 collection: collectionRows[0],
                 products: groupedProducts
             };
-
         } catch (error) {
             console.error("Error fetching collection data:", error);
             throw error;

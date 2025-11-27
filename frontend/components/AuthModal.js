@@ -43,7 +43,7 @@ export default function AuthModal({ isOpen, onClose, redirectAfterAuth = null })
         </button>
 
         {/* Header */}
-        <div className="bg-gradient-to-br from-amber-50 to-orange-50 px-8 pt-10 pb-6 text-center">
+        {/* <div className="bg-gradient-to-br from-amber-50 to-orange-50 px-8 pt-10 pb-6 text-center">
           <h2 className="text-3xl font-bold text-gray-900">
             {mode === 'login' ? 'Welcome Back' : mode === 'signup' ? 'Join U&I' : 'Reset Password'}
           </h2>
@@ -54,9 +54,9 @@ export default function AuthModal({ isOpen, onClose, redirectAfterAuth = null })
               ? 'Create your account in seconds'
               : 'Enter your email to reset'}
           </p>
-        </div>
+        </div> */}
 
-        {/* Tabs */}
+        {/* Tabs
         <div className="flex border-b border-gray-200 bg-white">
           {['login', 'signup', 'forgot'].map((tab) => (
             <button
@@ -71,7 +71,7 @@ export default function AuthModal({ isOpen, onClose, redirectAfterAuth = null })
               )}
             </button>
           ))}
-        </div>
+        </div> */}
 
         {/* Form Wrapper */}
         <div className="p-6 md:p-8">

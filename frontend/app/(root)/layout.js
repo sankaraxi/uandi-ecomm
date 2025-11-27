@@ -7,6 +7,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchCart } from "@/store/slices/cartSlice";
 import { Car } from "lucide-react";
 import CartModal from "@/components/CartModal";
+import PromoBar from "@/components/Home/PromoBar";
+import Footer from "@/components/Home/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,16 +31,20 @@ function CartInitializer() {
   return null;
 }
 
+
+
 export default function Layout({ children }) {
   return (
     <>
       <CartInitializer />
       <div
-        className={`${geistSans.variable} ${geistMono.variable} font-sans bg-[#FCFBF5] text-gray-900`}
+        className={`${geistSans.variable} ${geistMono.variable} font-sans bg-white text-gray-900`}
       >
+        <PromoBar />
         <Navbar />
         <main>{children}</main>
         <CartModal />
+        <Footer />
       </div>
     </>
     

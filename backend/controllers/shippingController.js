@@ -119,6 +119,56 @@ const shippingController = {
             throw error;
         }
     }
+    ,
+    trackOrderByNumber: async (req, res) => {
+        try {
+            const { orderNumber } = req.params;
+            if (!orderNumber) {
+                return res.status(400).json({ success: false, message: 'orderNumber is required' });
+            }
+
+            const token = await getShiprocketToken();
+
+            // Find our order_id from order number
+            const [orderRows] = await pool.query(
+                `SELECT order_id FROM orders WHERE order_number = ? LIMIT 1`,
+                [orderNumber]
+            );
+            if (orderRows.length === 0) {
+                return res.status(404).json({ success: false, message: 'Order not found' });
+            }
+            const orderId = orderRows[0].order_id;
+
+            // Find shiprocket response for the order
+            const [srRows] = await pool.query(
+                `SELECT awb_code, shipment_id FROM shiprocket_order_responses WHERE order_id = ? ORDER BY id DESC LIMIT 1`,
+                [orderId]
+            );
+            if (srRows.length === 0) {
+                return res.status(404).json({ success: false, message: 'No shipment details found for this order' });
+            }
+            const { awb_code, shipment_id } = srRows[0];
+
+            let trackUrl = '';
+            if (awb_code) {
+                trackUrl = `https://apiv2.shiprocket.in/v1/external/courier/track/awb/${encodeURIComponent(awb_code)}`;
+            } else if (shipment_id) {
+                trackUrl = `https://apiv2.shiprocket.in/v1/external/courier/track/shipment/${encodeURIComponent(shipment_id)}`;
+            } else {
+                return res.status(404).json({ success: false, message: 'Shipment identifiers are missing' });
+            }
+
+            const response = await axios.get(trackUrl, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            return res.status(200).json({ success: true, tracking: response.data });
+        } catch (error) {
+            console.error('Shiprocket Tracking Error:', error.response?.data || error.message);
+            const msg = error.response?.data?.message || error.message || 'Failed to fetch tracking';
+            return res.status(500).json({ success: false, message: msg });
+        }
+    }
 };
 
 module.exports = shippingController;
