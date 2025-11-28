@@ -462,7 +462,7 @@ export default function Page() {
                 key: data.key,
                 amount: data.order.amount,
                 currency: data.order.currency,
-                name: 'U & I',
+                name: 'U&I Naturals',
                 description: 'Order Payment',
                 order_id: data.order.id,
                 prefill: {

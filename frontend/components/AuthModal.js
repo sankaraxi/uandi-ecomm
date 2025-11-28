@@ -5,6 +5,9 @@ import { X, Mail, Lock, User, Eye, EyeOff, Loader2 } from 'lucide-react';
 import AuthForm from './AuthForm';
 
 export default function AuthModal({ isOpen, onClose, redirectAfterAuth = null }) {
+
+  console.log('AuthModal render, isOpen:', isOpen);
+  console.log('redirectAfterAuth:', redirectAfterAuth);
   const [mode, setMode] = useState('login');
   const [showPassword, setShowPassword] = useState(false);
   const modalRef = useRef(null);
@@ -41,6 +44,8 @@ export default function AuthModal({ isOpen, onClose, redirectAfterAuth = null })
         >
           <X className="h-5 w-5" />
         </button>
+
+
 
         {/* Header */}
         {/* <div className="bg-gradient-to-br from-amber-50 to-orange-50 px-8 pt-10 pb-6 text-center">

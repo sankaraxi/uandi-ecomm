@@ -54,7 +54,7 @@ export default function Navbar() {
 
   const navLinks = [
     { name: 'Shop All', href: '/products' },
-    { name: 'Currate Your Routine ', href: '/curate-your-routine' },
+    { name: 'Curate Your Routine ', href: '/curate-your-routine' },
     { name: 'Collections', href: '/#collections' },
     { name: 'About', href: '/about' },
     { name: 'AI Skincare', href: '/ai-skincare' },
