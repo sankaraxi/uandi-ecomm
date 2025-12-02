@@ -60,9 +60,18 @@ export default function AuthForm({ redirectAfterAuth = null, onAuthenticated, in
     }
 
     try {
+      const localCart = JSON.parse(localStorage.getItem('cart')) || [];
+      
       if (view === 'login') {
-        const userData = await dispatch(login({ identifier: formData.identifier, password: formData.password })).unwrap();
-        try { await dispatch(mergeCarts(userData)).unwrap(); } catch (mergeErr) { console.warn('Failed to merge local cart after login:', mergeErr); }
+        const userData = await dispatch(login({ 
+          identifier: formData.identifier, 
+          password: formData.password,
+          guestCart: localCart 
+        })).unwrap();
+        
+        // Clear local cart as it's now merged on server
+        if (localCart.length > 0) localStorage.removeItem('cart');
+        
         if (redirectAfterAuth) {
           router.push(redirectAfterAuth);
         } else if (userData?.role === 'superadmin' || userData?.role === 'admin') {
@@ -80,9 +89,13 @@ export default function AuthForm({ redirectAfterAuth = null, onAuthenticated, in
             confirmPassword: formData.confirmPassword,
             firstName: formData.firstName,
             lastName: formData.lastName,
+            guestCart: localCart
           })
         ).unwrap();
-        try { await dispatch(mergeCarts(userData)).unwrap(); } catch (mergeErr) { console.warn('Failed to merge local cart after signup:', mergeErr); }
+        
+        // Clear local cart as it's now merged on server
+        if (localCart.length > 0) localStorage.removeItem('cart');
+
         if (redirectAfterAuth) {
           router.push(redirectAfterAuth);
         } else {

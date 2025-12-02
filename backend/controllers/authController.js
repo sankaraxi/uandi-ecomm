@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
 const User = require('../models/authModel');
+const cartModel = require('../models/cartModel');
 require('dotenv').config();
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -14,6 +15,36 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
 });
+
+// Helper to merge guest cart during auth
+const mergeGuestCart = async (userId, items) => {
+  if (!Array.isArray(items) || items.length === 0) return;
+  
+  for (const raw of items) {
+    try {
+      const product_id = raw.product_id;
+      const variant_id = raw.variant_id ?? raw.variantId;
+      const quantity = Number(raw.quantity || 1);
+      const price = Number(raw.price ?? raw.final_price ?? raw.variant_price);
+      const main_image = raw.main_image ?? raw.thumbnail ?? raw.image ?? raw.variant_image ?? null;
+      const source_collection_id = raw.source_collection_id ?? raw.collection_id ?? null;
+
+      if (!product_id || !variant_id || Number.isNaN(price) || price <= 0 || quantity <= 0) continue;
+
+      await cartModel.addToCart({ 
+        user_id: userId, 
+        product_id, 
+        variant_id, 
+        quantity, 
+        price, 
+        main_image, 
+        source_collection_id 
+      });
+    } catch (err) {
+      console.error('Error merging item during auth:', err.message);
+    }
+  }
+};
 
 // Centralized cookie options to behave correctly in production and cross-site scenarios
 const isProd = process.env.NODE_ENV === 'production';
@@ -106,7 +137,7 @@ exports.googleCallback = async (req, res, next) => {
 };
 
 exports.signup = async (req, res, next) => {
-  const { email, phoneNumber, password, confirmPassword, firstName, lastName } = req.body;
+  const { email, phoneNumber, password, confirmPassword, firstName, lastName, guestCart } = req.body;
   if (!email && !phoneNumber) return res.status(400).json({ error: 'Email or phone number required' });
   if (!password || !confirmPassword) return res.status(400).json({ error: 'Password and confirm password required' });
   if (password !== confirmPassword) return res.status(400).json({ error: 'Passwords do not match' });
@@ -117,6 +148,12 @@ exports.signup = async (req, res, next) => {
     if (existingUser) return res.status(400).json({ error: 'User already exists' });
 
     const user = await User.createManualUser(email, phoneNumber, password, firstName, lastName);
+    
+    // Merge guest cart if provided
+    if (guestCart && Array.isArray(guestCart)) {
+      await mergeGuestCart(user.user_id, guestCart);
+    }
+
     const accessToken = jwt.sign(
       { user_id: user.user_id, role_id: user.role_id },
       process.env.JWT_ACCESS_SECRET,
@@ -140,7 +177,7 @@ exports.signup = async (req, res, next) => {
 };
 
 exports.login = async (req, res, next) => {
-  const { identifier, password } = req.body;
+  const { identifier, password, guestCart } = req.body;
   if (!identifier || !password) return res.status(400).json({ error: 'Identifier and password required' });
 
   try {
@@ -149,6 +186,11 @@ exports.login = async (req, res, next) => {
 
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) return res.status(401).json({ error: 'Invalid credentials' });
+
+    // Merge guest cart if provided
+    if (guestCart && Array.isArray(guestCart)) {
+      await mergeGuestCart(user.user_id, guestCart);
+    }
 
     const accessToken = jwt.sign(
       { user_id: user.user_id, role_id: user.role_id },

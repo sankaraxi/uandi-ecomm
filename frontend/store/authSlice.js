@@ -14,11 +14,11 @@
     }
   });
 
-  export const login = createAsyncThunk('auth/login', async ({ identifier, password }, { rejectWithValue }) => {
+  export const login = createAsyncThunk('auth/login', async ({ identifier, password, guestCart }, { rejectWithValue }) => {
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
-        { identifier, password },
+        { identifier, password, guestCart },
         { withCredentials: true }
       );
       return response.data.user;
@@ -27,12 +27,12 @@
     }
   });
 
-  export const signup = createAsyncThunk('auth/signup', async ({ email, phoneNumber, password, confirmPassword, firstName, lastName }, { rejectWithValue }) => {
+  export const signup = createAsyncThunk('auth/signup', async ({ email, phoneNumber, password, confirmPassword, firstName, lastName, guestCart }, { rejectWithValue }) => {
     
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/auth/signup`,
-        { email, phoneNumber, password, confirmPassword, firstName, lastName },
+        { email, phoneNumber, password, confirmPassword, firstName, lastName, guestCart },
         { withCredentials: true }
       );
       return response.data.user;
