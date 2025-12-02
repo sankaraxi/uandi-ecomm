@@ -102,9 +102,17 @@ export default function AuthForm({ redirectAfterAuth = null, onAuthenticated, in
   };
 
   const handleGoogleLogin = () => {
-    if (redirectAfterAuth) {
-      try { localStorage.setItem('postAuthRedirect', redirectAfterAuth); } catch (_) {}
-    }
+    const target = redirectAfterAuth || '/';
+    try {
+      // Persist intent in localStorage
+      localStorage.setItem('postAuthRedirect', target);
+    } catch (_) {}
+    try {
+      // Also set a short-lived cookie (10 minutes) for robustness across redirects
+      const maxAgeSeconds = 600;
+      document.cookie = `postAuthRedirect=${encodeURIComponent(target)}; Max-Age=${maxAgeSeconds}; Path=/; SameSite=Lax`;
+    } catch (_) {}
+    // Kick off Google OAuth
     window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
   };
 
