@@ -127,8 +127,9 @@ export default function AuthForm({ redirectAfterAuth = null, onAuthenticated, in
     } catch (_) {}
     // Kick off Google OAuth, include redirect hint for backend
     const redirectParam = encodeURIComponent(target);
+    const originParam = encodeURIComponent(window.location.origin);
     const base = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
-    const url = `${base}?redirect=${redirectParam}`;
+    const url = `${base}?redirect=${redirectParam}&origin=${originParam}`;
     window.location.href = url;
   };
 

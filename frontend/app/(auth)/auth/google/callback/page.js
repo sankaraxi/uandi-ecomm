@@ -71,6 +71,7 @@ function GoogleCallbackInner() {
         // ----------------------------
         try {
           console.log("Merging carts for user:", verifiedUser);
+          console.log("Current origin:", window.location.origin);
           let localCart = JSON.parse(localStorage.getItem('cart')) || [];
           console.log("Local cart before merge:", localCart);
           await dispatch(mergeCarts(verifiedUser)).unwrap();

@@ -70,11 +70,11 @@ const validatePassword = (password) => {
 };
 
 exports.googleLogin = (req, res, next) => {
-  const { redirect } = req.query || {};
+  const { redirect, origin } = req.query || {};
   let state;
   try {
-    if (redirect) {
-      state = Buffer.from(JSON.stringify({ redirect })).toString('base64');
+    if (redirect || origin) {
+      state = Buffer.from(JSON.stringify({ redirect, origin })).toString('base64');
     }
   } catch (e) {
     // ignore state build errors
@@ -115,19 +115,27 @@ exports.googleCallback = async (req, res, next) => {
 
       // Pull redirect hint from OAuth state if present
       let redirectHint = null;
+      let originHint = null;
       try {
         if (req.query && req.query.state) {
           const decoded = JSON.parse(Buffer.from(req.query.state, 'base64').toString('utf8'));
-          if (decoded && typeof decoded.redirect === 'string') redirectHint = decoded.redirect;
+          if (decoded) {
+            if (typeof decoded.redirect === 'string') redirectHint = decoded.redirect;
+            if (typeof decoded.origin === 'string') originHint = decoded.origin;
+          }
         }
       } catch (e) {
         // ignore malformed state
       }
 
       console.log('Cookies set for Google callback');
+      
+      // Use origin from state if available, otherwise fall back to FRONTEND_URL
+      const baseUrl = originHint || FRONTEND_URL;
+      
       const callbackUrl = redirectHint
-        ? `${FRONTEND_URL}/auth/google/callback?redirect=${encodeURIComponent(redirectHint)}`
-        : `${FRONTEND_URL}/auth/google/callback`;
+        ? `${baseUrl}/auth/google/callback?redirect=${encodeURIComponent(redirectHint)}`
+        : `${baseUrl}/auth/google/callback`;
       res.redirect(callbackUrl);
     } catch (error) {
       console.error('Error in Google callback:', error);
