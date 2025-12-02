@@ -112,8 +112,11 @@ export default function AuthForm({ redirectAfterAuth = null, onAuthenticated, in
       const maxAgeSeconds = 600;
       document.cookie = `postAuthRedirect=${encodeURIComponent(target)}; Max-Age=${maxAgeSeconds}; Path=/; SameSite=Lax`;
     } catch (_) {}
-    // Kick off Google OAuth
-    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
+    // Kick off Google OAuth, include redirect hint for backend
+    const redirectParam = encodeURIComponent(target);
+    const base = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
+    const url = `${base}?redirect=${redirectParam}`;
+    window.location.href = url;
   };
 
   return (
