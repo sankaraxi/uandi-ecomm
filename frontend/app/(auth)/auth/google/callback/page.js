@@ -17,6 +17,11 @@ function GoogleCallbackInner() {
     // Prefer cookie, then localStorage, then role-based default
     let intended = null;
     try {
+      // If backend appended redirect as query param, honor it first
+      const qp = searchParams.get('redirect');
+      if (qp) intended = qp;
+    } catch (_) {}
+    try {
       const cookies = document.cookie.split(';').map(c => c.trim());
       const found = cookies.find(c => c.startsWith('postAuthRedirect='));
       if (found) intended = decodeURIComponent(found.split('=')[1] || '');

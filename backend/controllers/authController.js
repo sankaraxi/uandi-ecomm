@@ -20,7 +20,21 @@ const validatePassword = (password) => {
   return passwordRegex.test(password);
 };
 
-exports.googleLogin = passport.authenticate('google', { scope: ['profile', 'email'] });
+exports.googleLogin = (req, res, next) => {
+  const { redirect } = req.query || {};
+  let state;
+  try {
+    if (redirect) {
+      state = Buffer.from(JSON.stringify({ redirect })).toString('base64');
+    }
+  } catch (e) {
+    // ignore state build errors
+  }
+  return passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    state,
+  })(req, res, next);
+};
 
 exports.googleCallback = async (req, res, next) => {
   passport.authenticate('google', { session: false }, async (err, user) => {
@@ -60,8 +74,22 @@ exports.googleCallback = async (req, res, next) => {
         sameSite: 'lax',
       });
 
-      console.log('Cookies set:', { accessToken, refreshToken }); // Debug log
-      res.redirect(`${FRONTEND_URL}/auth/google/callback`);
+      // Pull redirect hint from OAuth state if present
+      let redirectHint = null;
+      try {
+        if (req.query && req.query.state) {
+          const decoded = JSON.parse(Buffer.from(req.query.state, 'base64').toString('utf8'));
+          if (decoded && typeof decoded.redirect === 'string') redirectHint = decoded.redirect;
+        }
+      } catch (e) {
+        // ignore malformed state
+      }
+
+      console.log('Cookies set for Google callback');
+      const callbackUrl = redirectHint
+        ? `${FRONTEND_URL}/auth/google/callback?redirect=${encodeURIComponent(redirectHint)}`
+        : `${FRONTEND_URL}/auth/google/callback`;
+      res.redirect(callbackUrl);
     } catch (error) {
       console.error('Error in Google callback:', error);
       res.redirect(`${FRONTEND_URL}/login?error=server_error`);
@@ -98,11 +126,13 @@ exports.signup = async (req, res, next) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       maxAge: 15 * 60 * 1000,
+      sameSite: 'lax',
     });
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: 'lax',
     });
 
     res.status(201).json({ user: { user_id: user.user_id, email: user.email, phone_number: user.phone_number, first_name: user.first_name, last_name: user.last_name  } });
@@ -139,11 +169,13 @@ exports.login = async (req, res, next) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       maxAge: 15 * 60 * 1000,
+      sameSite: 'lax',
     });
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: 'lax',
     });
 
     res.json({ user: { user_id: user.user_id, email: user.email, phone_number: user.phone_number, first_name: user.first_name, last_name: user.last_name,  profile_picture_url: user.profile_picture_url, role: user.role_name,} });
