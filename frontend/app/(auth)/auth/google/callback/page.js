@@ -4,7 +4,7 @@ import { useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 import { verifyUser, refreshToken } from '@/store/authSlice';
-import { mergeCarts } from '@/store/slices/cartSlice';
+import { mergeCarts, fetchCart } from '@/store/slices/cartSlice';
 import Swal from 'sweetalert2';
 
 function GoogleCallbackInner() {
@@ -55,7 +55,13 @@ function GoogleCallbackInner() {
       .unwrap()
       .then(async (verifiedUser) => {
         Swal.fire({ icon: 'success', title: 'Success', text: 'Logged in with Google', confirmButtonColor: '#2563eb' });
-        try { await dispatch(mergeCarts()).unwrap(); } catch (mergeErr) { console.warn('Failed to merge cart after Google login:', mergeErr); }
+        try {
+          await dispatch(mergeCarts()).unwrap();
+          // Ensure cart state is hydrated before redirecting
+          await dispatch(fetchCart()).unwrap();
+        } catch (mergeErr) {
+          console.warn('Failed to merge/fetch cart after Google login:', mergeErr);
+        }
         if (!navigatedRef.current) {
           router.replace(resolveRedirect(verifiedUser?.role));
           navigatedRef.current = true;
@@ -69,7 +75,12 @@ function GoogleCallbackInner() {
             .then(() => dispatch(verifyUser()).unwrap())
             .then(async (verifiedUser) => {
               Swal.fire({ icon: 'success', title: 'Success', text: 'Logged in with Google', confirmButtonColor: '#2563eb' });
-              try { await dispatch(mergeCarts()).unwrap(); } catch (mergeErr) { console.warn('Failed to merge cart after Google login (refresh path):', mergeErr); }
+              try {
+                await dispatch(mergeCarts()).unwrap();
+                await dispatch(fetchCart()).unwrap();
+              } catch (mergeErr) {
+                console.warn('Failed to merge/fetch cart after Google login (refresh path):', mergeErr);
+              }
               if (!navigatedRef.current) {
                 router.replace(resolveRedirect(verifiedUser?.role));
                 navigatedRef.current = true;

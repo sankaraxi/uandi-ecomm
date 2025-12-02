@@ -112,22 +112,43 @@ export const clearCart = createAsyncThunk('cart/clearCart', async (_, { dispatch
     dispatch(fetchCart());
 });
 
-export const mergeCarts = createAsyncThunk('cart/mergeCarts', async (_, { dispatch, getState }) => {
-  const { auth } = getState();
-  const localCart = JSON.parse(localStorage.getItem('cart')) || [];
-  if (auth.isAuthenticated && localCart.length > 0) {
-    const { user } = auth;
-    // Assuming the backend has a merge endpoint, if not, this will fail.
-    // You might need to add this endpoint to your backend.
-    // For now, we will add items one by one.
-    for (const item of localCart) {
-        await axios.post(`${API_URL}/cart`, { ...item, user_id: user.user_id }, {
-            withCredentials: true,
-        });
+export const mergeCarts = createAsyncThunk('cart/mergeCarts', async (_, { dispatch, getState, rejectWithValue }) => {
+  try {
+    const { auth } = getState();
+    const localCart = JSON.parse(localStorage.getItem('cart')) || [];
+    if (auth.isAuthenticated && localCart.length > 0) {
+      const { user } = auth;
+
+      // Normalize and validate items before sending to API
+      const normalized = localCart
+        .map((i) => {
+          const price = Number(i.price ?? i.final_price ?? i.variant_price);
+          const quantity = Number(i.quantity ?? 1);
+          const product_id = i.product_id;
+          const variant_id = i.variant_id ?? i.cart_item_id ?? i.variantId;
+          const main_image = i.main_image ?? i.thumbnail ?? i.image ?? i.variant_image ?? null;
+          const source_collection_id = i.source_collection_id ?? i.collection_id ?? null;
+          return { user_id: user.user_id, product_id, variant_id, quantity, price, main_image, source_collection_id };
+        })
+        .filter((x) => x.product_id && x.variant_id && !Number.isNaN(x.price) && x.price > 0 && x.quantity > 0);
+
+      // Add sequentially to respect stock checks and avoid partial failures
+      for (const item of normalized) {
+        try {
+          await axios.post(`${API_URL}/cart`, item, { withCredentials: true });
+        } catch (err) {
+          console.warn('Failed to merge item into server cart:', item, err?.response?.data || err?.message);
+        }
+      }
+
+      // Clear local cart after attempting merge
+      localStorage.removeItem('cart');
     }
-    localStorage.removeItem('cart');
+    await dispatch(fetchCart()).unwrap();
+    return true;
+  } catch (e) {
+    return rejectWithValue(e?.message || 'Failed to merge carts');
   }
-  dispatch(fetchCart());
 });
 
 

@@ -39,7 +39,7 @@ export default function Page() {
 
     const authState = useSelector((state) => state.auth);
     const { addresses, loading: addressesLoading, error: addressesError } = useSelector((state) => state.addresses);
-    const { items } = useSelector((state) => state.cart);
+    const { items, loading: cartLoading } = useSelector((state) => state.cart);
     const {
         appliedCoupon,
         discount,
@@ -84,12 +84,12 @@ export default function Page() {
 
     // Check for empty cart - moved inside useEffect
     useEffect(() => {
-        if (!items || items.length === 0) {
-            setIsEmptyCart(true);
-        } else {
+        if (cartLoading) {
             setIsEmptyCart(false);
+            return;
         }
-    }, [items]);
+        setIsEmptyCart(!items || items.length === 0);
+    }, [items, cartLoading]);
 
     useEffect(() => {
         const scriptSrc = 'https://checkout.razorpay.com/v1/checkout.js';
@@ -161,7 +161,14 @@ export default function Page() {
         }
     }, [addresses]);
 
-    // Handle empty cart rendering - moved after all hooks
+    // Handle empty cart rendering
+    if (cartLoading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center text-gray-600">Loading your cart…</div>
+            </div>
+        );
+    }
     if (isEmptyCart) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
