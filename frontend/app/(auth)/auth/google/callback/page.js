@@ -70,8 +70,11 @@ function GoogleCallbackInner() {
         // STEP 2: Merge Cart Immediately
         // ----------------------------
         try {
+          console.log("Merging carts for user:", verifiedUser);
           await dispatch(mergeCarts(verifiedUser)).unwrap();
+          console.log("Fetching updated cart for user:", verifiedUser);
           await dispatch(fetchCart()).unwrap();
+          console.log("Cart merge and fetch completed.");
         } catch (mergeErr) {
           console.warn("Cart merge/fetch failed:", mergeErr);
         }
