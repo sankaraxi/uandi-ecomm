@@ -59,6 +59,49 @@ const cartController = {
         }
     },
 
+    // Bulk merge: guest cart items -> user cart
+    mergeCart: async (req, res) => {
+        try {
+            const { items } = req.body || {};
+            if (!Array.isArray(items) || items.length === 0) {
+                return res.status(400).json({ success: false, message: 'No items to merge' });
+            }
+
+            const merged = [];
+            const failed = [];
+
+            for (const raw of items) {
+                try {
+                    const user_id = raw.user_id;
+                    const product_id = raw.product_id;
+                    const variant_id = raw.variant_id;
+                    const quantity = Number(raw.quantity || 1);
+                    const price = Number(raw.price);
+                    const main_image = raw.main_image || null;
+                    const source_collection_id = raw.source_collection_id || null;
+
+                    if (!user_id || !product_id || !variant_id || Number.isNaN(price) || price <= 0 || quantity <= 0) {
+                        failed.push({ item: raw, error: 'Invalid fields' });
+                        continue;
+                    }
+
+                    await cartModel.addToCart({ user_id, product_id, variant_id, quantity, price, main_image, source_collection_id });
+                    merged.push({ product_id, variant_id });
+                } catch (err) {
+                    failed.push({ item: raw, error: err?.message || 'Add failed' });
+                }
+            }
+
+            const userId = items[0]?.user_id;
+            const refreshed = userId ? await cartModel.getCartByUserId(userId) : [];
+
+            res.status(200).json({ success: true, mergedCount: merged.length, failedCount: failed.length, failed, items: refreshed });
+        } catch (err) {
+            console.error('Error merging cart:', err);
+            res.status(500).json({ success: false, message: 'Failed to merge cart' });
+        }
+    },
+
     // Update quantity
     updateQuantity: async (req, res) => {
         try {

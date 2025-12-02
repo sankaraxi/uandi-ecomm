@@ -119,8 +119,8 @@ export const mergeCarts = createAsyncThunk('cart/mergeCarts', async (_, { dispat
     if (auth.isAuthenticated && localCart.length > 0) {
       const { user } = auth;
 
-      // Normalize and validate items before sending to API
-      const normalized = localCart
+      // Normalize items for bulk merge endpoint
+      const items = localCart
         .map((i) => {
           const price = Number(i.price ?? i.final_price ?? i.variant_price);
           const quantity = Number(i.quantity ?? 1);
@@ -130,18 +130,9 @@ export const mergeCarts = createAsyncThunk('cart/mergeCarts', async (_, { dispat
           const source_collection_id = i.source_collection_id ?? i.collection_id ?? null;
           return { user_id: user.user_id, product_id, variant_id, quantity, price, main_image, source_collection_id };
         })
-        .filter((x) => x.product_id && x.variant_id && !Number.isNaN(x.price) && x.price > 0 && x.quantity > 0);
+        .filter((x) => x.user_id && x.product_id && x.variant_id && !Number.isNaN(x.price) && x.price > 0 && x.quantity > 0);
 
-      // Add sequentially to respect stock checks and avoid partial failures
-      for (const item of normalized) {
-        try {
-          await axios.post(`${API_URL}/cart`, item, { withCredentials: true });
-        } catch (err) {
-          console.warn('Failed to merge item into server cart:', item, err?.response?.data || err?.message);
-        }
-      }
-
-      // Clear local cart after attempting merge
+      await axios.post(`${API_URL}/cart/merge`, { items }, { withCredentials: true });
       localStorage.removeItem('cart');
     }
     await dispatch(fetchCart()).unwrap();

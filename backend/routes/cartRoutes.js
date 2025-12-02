@@ -8,6 +8,9 @@ router.get('/:userId', cartController.getCart);
 // ADD item to cart
 router.post('/', cartController.addToCart);
 
+// BULK merge guest cart into user cart
+router.post('/merge', cartController.mergeCart);
+
 // UPDATE quantity
 router.put('/:cartItemId', cartController.updateQuantity);
 
