@@ -62,7 +62,7 @@ export default function AuthForm({ redirectAfterAuth = null, onAuthenticated, in
     try {
       if (view === 'login') {
         const userData = await dispatch(login({ identifier: formData.identifier, password: formData.password })).unwrap();
-        try { await dispatch(mergeCarts()).unwrap(); } catch (mergeErr) { console.warn('Failed to merge local cart after login:', mergeErr); }
+        try { await dispatch(mergeCarts(userData)).unwrap(); } catch (mergeErr) { console.warn('Failed to merge local cart after login:', mergeErr); }
         if (redirectAfterAuth) {
           router.push(redirectAfterAuth);
         } else if (userData?.role === 'superadmin' || userData?.role === 'admin') {
@@ -72,7 +72,7 @@ export default function AuthForm({ redirectAfterAuth = null, onAuthenticated, in
         }
         if (onAuthenticated) onAuthenticated(userData);
       } else if (view === 'signup') {
-        await dispatch(
+        const userData = await dispatch(
           signup({
             email: formData.email,
             phoneNumber: formData.phoneNumber,
@@ -82,7 +82,7 @@ export default function AuthForm({ redirectAfterAuth = null, onAuthenticated, in
             lastName: formData.lastName,
           })
         ).unwrap();
-        try { await dispatch(mergeCarts()).unwrap(); } catch (mergeErr) { console.warn('Failed to merge local cart after signup:', mergeErr); }
+        try { await dispatch(mergeCarts(userData)).unwrap(); } catch (mergeErr) { console.warn('Failed to merge local cart after signup:', mergeErr); }
         if (redirectAfterAuth) {
           router.push(redirectAfterAuth);
         } else {

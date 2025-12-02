@@ -56,7 +56,7 @@ function GoogleCallbackInner() {
       .then(async (verifiedUser) => {
         Swal.fire({ icon: 'success', title: 'Success', text: 'Logged in with Google', confirmButtonColor: '#2563eb' });
         try {
-          await dispatch(mergeCarts()).unwrap();
+          await dispatch(mergeCarts(verifiedUser)).unwrap();
           // Ensure cart state is hydrated before redirecting
           await dispatch(fetchCart()).unwrap();
         } catch (mergeErr) {
@@ -76,7 +76,7 @@ function GoogleCallbackInner() {
             .then(async (verifiedUser) => {
               Swal.fire({ icon: 'success', title: 'Success', text: 'Logged in with Google', confirmButtonColor: '#2563eb' });
               try {
-                await dispatch(mergeCarts()).unwrap();
+                await dispatch(mergeCarts(verifiedUser)).unwrap();
                 await dispatch(fetchCart()).unwrap();
               } catch (mergeErr) {
                 console.warn('Failed to merge/fetch cart after Google login (refresh path):', mergeErr);

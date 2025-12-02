@@ -112,12 +112,14 @@ export const clearCart = createAsyncThunk('cart/clearCart', async (_, { dispatch
     dispatch(fetchCart());
 });
 
-export const mergeCarts = createAsyncThunk('cart/mergeCarts', async (_, { dispatch, getState, rejectWithValue }) => {
+export const mergeCarts = createAsyncThunk('cart/mergeCarts', async (providedUser, { dispatch, getState, rejectWithValue }) => {
   try {
     const { auth } = getState();
+    const user = providedUser || auth.user;
+    const isAuthenticated = !!user || auth.isAuthenticated;
+
     const localCart = JSON.parse(localStorage.getItem('cart')) || [];
-    if (auth.isAuthenticated && localCart.length > 0) {
-      const { user } = auth;
+    if (isAuthenticated && user && localCart.length > 0) {
 
       // Normalize items for bulk merge endpoint
       const items = localCart
@@ -132,8 +134,10 @@ export const mergeCarts = createAsyncThunk('cart/mergeCarts', async (_, { dispat
         })
         .filter((x) => x.user_id && x.product_id && x.variant_id && !Number.isNaN(x.price) && x.price > 0 && x.quantity > 0);
 
-      await axios.post(`${API_URL}/cart/merge`, { items }, { withCredentials: true });
-      localStorage.removeItem('cart');
+      if (items.length > 0) {
+        await axios.post(`${API_URL}/cart/merge`, { items }, { withCredentials: true });
+        localStorage.removeItem('cart');
+      }
     }
     await dispatch(fetchCart()).unwrap();
     return true;
