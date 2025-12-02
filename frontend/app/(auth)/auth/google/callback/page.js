@@ -14,27 +14,30 @@ function GoogleCallbackInner() {
   const navigatedRef = useRef(false);
 
   const resolveRedirect = (role) => {
-    // Prefer cookie, then localStorage, then role-based default
     let intended = null;
+
     try {
-      // If backend appended redirect as query param, honor it first
       const qp = searchParams.get('redirect');
       if (qp) intended = qp;
     } catch (_) {}
+
     try {
       const cookies = document.cookie.split(';').map(c => c.trim());
       const found = cookies.find(c => c.startsWith('postAuthRedirect='));
       if (found) intended = decodeURIComponent(found.split('=')[1] || '');
     } catch (_) {}
+
     if (!intended) {
       try { intended = localStorage.getItem('postAuthRedirect'); } catch (_) {}
     }
+
     try {
       document.cookie = 'postAuthRedirect=; Max-Age=0; path=/';
       localStorage.removeItem('postAuthRedirect');
     } catch (_) {}
 
     if (intended) return intended;
+
     switch (role) {
       case 'superadmin': return '/superadmin/dashboard';
       case 'admin': return '/admin/dashboard';
@@ -46,56 +49,81 @@ function GoogleCallbackInner() {
   useEffect(() => {
     const error = searchParams.get('error');
     if (error) {
-      Swal.fire({ icon: 'error', title: 'Error', text: `Google authentication failed: ${error}`, confirmButtonColor: '#2563eb' });
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: `Google authentication failed: ${error}`,
+        confirmButtonColor: '#2563eb'
+      });
       router.push('/login');
       return;
     }
 
-    dispatch(verifyUser())
-      .unwrap()
-      .then(async (verifiedUser) => {
-        Swal.fire({ icon: 'success', title: 'Success', text: 'Logged in with Google', confirmButtonColor: '#2563eb' });
+    const runFlow = async () => {
+      try {
+        // ----------------------------
+        // STEP 1: Verify User
+        // ----------------------------
+        const verifiedUser = await dispatch(verifyUser()).unwrap();
+
+        // ----------------------------
+        // STEP 2: Merge Cart Immediately
+        // ----------------------------
         try {
           await dispatch(mergeCarts(verifiedUser)).unwrap();
-          // Ensure cart state is hydrated before redirecting
           await dispatch(fetchCart()).unwrap();
         } catch (mergeErr) {
-          console.warn('Failed to merge/fetch cart after Google login:', mergeErr);
+          console.warn("Cart merge/fetch failed:", mergeErr);
         }
+
+        // ----------------------------
+        // STEP 3: Redirect
+        // ----------------------------
         if (!navigatedRef.current) {
           router.replace(resolveRedirect(verifiedUser?.role));
           navigatedRef.current = true;
         }
-      })
-      .catch((err) => {
-        console.error('Verify user error:', err);
-        if (err === 'Invalid access token') {
-          dispatch(refreshToken())
-            .unwrap()
-            .then(() => dispatch(verifyUser()).unwrap())
-            .then(async (verifiedUser) => {
-              Swal.fire({ icon: 'success', title: 'Success', text: 'Logged in with Google', confirmButtonColor: '#2563eb' });
-              try {
-                await dispatch(mergeCarts(verifiedUser)).unwrap();
-                await dispatch(fetchCart()).unwrap();
-              } catch (mergeErr) {
-                console.warn('Failed to merge/fetch cart after Google login (refresh path):', mergeErr);
-              }
-              if (!navigatedRef.current) {
-                router.replace(resolveRedirect(verifiedUser?.role));
-                navigatedRef.current = true;
-              }
-            })
-            .catch((refreshErr) => {
-              console.error('Refresh token error:', refreshErr);
-              Swal.fire({ icon: 'error', title: 'Error', text: 'Google authentication failed: Unable to refresh token', confirmButtonColor: '#2563eb' });
-              router.push('/');
+
+        // ----------------------------
+        // STEP 4: Notify
+        // ----------------------------
+        Swal.fire({
+          icon: 'success',
+          title: 'Success',
+          text: 'Logged in with Google',
+          confirmButtonColor: '#2563eb'
+        });
+
+      } catch (err) {
+        // If user is not verified due to token issue — try refreshing
+        if (err === "Invalid access token") {
+          try {
+            await dispatch(refreshToken()).unwrap();
+            return runFlow(); // retry after refresh
+          } catch (refreshErr) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'Google authentication failed: Unable to refresh token',
+              confirmButtonColor: '#2563eb'
             });
-        } else {
-          Swal.fire({ icon: 'error', title: 'Error', text: `Google authentication failed: ${err}`, confirmButtonColor: '#2563eb' });
-          router.push('/');
+            router.push('/');
+            return;
+          }
         }
-      });
+
+        // Any other error
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: `Google authentication failed: ${err}`,
+          confirmButtonColor: '#2563eb'
+        });
+        router.push('/');
+      }
+    };
+
+    runFlow();
   }, [dispatch, router, searchParams]);
 
   return null;
