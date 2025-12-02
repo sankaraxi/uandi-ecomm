@@ -89,11 +89,11 @@ function GoogleCallbackInner() {
             .catch((refreshErr) => {
               console.error('Refresh token error:', refreshErr);
               Swal.fire({ icon: 'error', title: 'Error', text: 'Google authentication failed: Unable to refresh token', confirmButtonColor: '#2563eb' });
-              router.push('/login');
+              router.push('/');
             });
         } else {
           Swal.fire({ icon: 'error', title: 'Error', text: `Google authentication failed: ${err}`, confirmButtonColor: '#2563eb' });
-          router.push('/login');
+          router.push('/');
         }
       });
   }, [dispatch, router, searchParams]);

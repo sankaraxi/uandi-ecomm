@@ -62,16 +62,24 @@ export default function Navbar() {
   ];
 
   useEffect(() => {
+    // Skip verification on callback page to let the page handle it
+    if (pathname === '/auth/google/callback') return;
+
     // Don't verify if we're logging out
-    if (!isLoggingOut &&!isAuthenticated && !loading) {
+    if (!isLoggingOut && !isAuthenticated && !loading) {
       dispatch(verifyUser())
         .unwrap()
+        .then((user) => {
+          // Session restored. Merge carts.
+          dispatch(mergeCarts(user));
+        })
         .catch((error) => {
           // console.error("Verify user error on dashboard:", error);
           if (error === "Invalid access token") {
             dispatch(refreshToken())
               .unwrap()
-              .then(() => dispatch(verifyUser()))
+              .then(() => dispatch(verifyUser()).unwrap())
+              .then((user) => dispatch(mergeCarts(user)))
               .catch(() => router.push("/"));
           } 
           // else {
@@ -81,24 +89,7 @@ export default function Navbar() {
     }
   }, []);
 
-  // When authentication status becomes true (including after Google OAuth redirect),
-  // attempt to merge any guest cart items stored in localStorage into the user cart.
-  useEffect(() => {
-    if (isAuthenticated) {
-      try {
-        const localCart = JSON.parse(localStorage.getItem('cart')) || [];
-        if (localCart.length > 0) {
-          dispatch(mergeCarts())
-            .unwrap()
-            .catch(() => {
-              // Swallow merge errors here; user can retry from cart view.
-            });
-        }
-      } catch (_) {
-        // ignore
-      }
-    }
-  }, [isAuthenticated, dispatch]);
+
 
   const handleLogout = (e) => {
     e.stopPropagation();

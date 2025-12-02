@@ -86,7 +86,7 @@ export default function AuthForm({ redirectAfterAuth = null, onAuthenticated, in
         if (redirectAfterAuth) {
           router.push(redirectAfterAuth);
         } else {
-          router.push('/dashboard');
+          router.push('/');
         }
         if (onAuthenticated) onAuthenticated();
       } else if (view === 'forgot') {
