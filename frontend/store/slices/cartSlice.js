@@ -119,6 +119,7 @@ export const mergeCarts = createAsyncThunk('cart/mergeCarts', async (providedUse
     const isAuthenticated = !!user || auth.isAuthenticated;
 
     const localCart = JSON.parse(localStorage.getItem('cart')) || [];
+    console.log("Local cart items to merge:", localCart);
     if (isAuthenticated && user && localCart.length > 0) {
 
       // Normalize items for bulk merge endpoint
