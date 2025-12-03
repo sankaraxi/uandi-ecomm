@@ -39,6 +39,7 @@ export default function CartModal() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.4 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.10, ease: 'easeOut' }}
             className="fixed inset-0 bg-black z-40"
             onClick={handleClose}
           />
@@ -47,7 +48,8 @@ export default function CartModal() {
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            style={{ willChange: 'transform' }}
             className="fixed right-0 top-0 z-50 w-full sm:w-[420px] h-full bg-white/80 backdrop-blur-xl shadow-2xl flex flex-col rounded-l-2xl border-l border-gray-200"
           >
             <div className="flex items-center justify-between p-5 border-b border-gray-200">
@@ -71,7 +73,7 @@ export default function CartModal() {
               </div>
             </div>
 
-            <div className="flex-grow overflow-y-auto p-5 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+            <div className="grow overflow-y-auto p-5 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent will-change-transform">
               {loading && <div className="text-center">Updating cart...</div>}
               {items.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-gray-500">
@@ -83,11 +85,12 @@ export default function CartModal() {
                   {items.map((item) => (
                     <motion.li
                       key={item.variant_id}
-                      initial={{ opacity: 0, y: 10 }}
+                      initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.16, ease: 'easeOut' }}
                       className="flex py-4"
                     >
-                      <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg border border-gray-200">
+                      <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg border border-gray-200 will-change-transform">
                         <img
                           src={item.main_image}
                           alt={item.product_name}
@@ -134,9 +137,10 @@ export default function CartModal() {
 
             {items.length > 0 && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="border-t border-gray-200 p-5 bg-white/60"
+                transition={{ duration: 0.16, ease: 'easeOut' }}
+                className="border-t border-gray-200 p-5 bg-white/10"
               >
                 <div className="flex justify-between text-lg font-medium text-gray-900">
                   <p>Subtotal</p>

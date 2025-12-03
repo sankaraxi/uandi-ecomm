@@ -36,7 +36,8 @@ function GoogleCallbackInner() {
       localStorage.removeItem('postAuthRedirect');
     } catch (_) {}
 
-    if (intended) return intended;
+    // If an intended redirect exists and is not root/login, honor it.
+    if (intended && intended !== '/' && intended !== '/login') return intended;
 
     switch (role) {
       case 'superadmin': return '/superadmin/dashboard';

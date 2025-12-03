@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 
 const sections = [
   {
@@ -8,6 +9,7 @@ const sections = [
     title: "Kids",
     description: "Gentle care formulated for little, sensitive skin.",
     href: "/collections/2",
+    image: "/images/kids.png",
     accent: "#FFD3D5",
   },
   {
@@ -15,6 +17,7 @@ const sections = [
     title: "Teens",
     description: "Targeted essentials to balance and protect changing teen skin.",
     href: "/collections/3",
+    image: "/images/teens.png",
     accent: "#FFC3C6",
   },
   {
@@ -22,6 +25,7 @@ const sections = [
     title: "Adults",
     description: "Advanced formulations for everyday skin health and glow.",
     href: "/collections/4",
+    image: "/images/adults.png",
     accent: "#FFB3B7",
   },
   {
@@ -29,6 +33,7 @@ const sections = [
     title: "Treatment",
     description: "Clinical-grade treatments curated for immediate results .",
     href: "/collections/treatment",
+    image: "/images/treatment.png",
     accent: "#FFA3A9",
   },
 ];
@@ -38,8 +43,7 @@ export default function Collections() {
     <section id="collections" className="w-full py-16 md:py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-
-         <div className="text-center mb-14">
+        <div className="text-center mb-14">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 mb-4 tracking-tight">
             Explore Our Collections
           </h2>
@@ -47,7 +51,6 @@ export default function Collections() {
             Discover curated skincare ranges designed for every age and concern.
           </p>
         </div>
-
 
         {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -57,8 +60,7 @@ export default function Collections() {
                 className="relative rounded-2xl overflow-hidden border shadow-sm transition-all duration-300 group-hover:shadow-lg"
                 style={{
                   borderColor: "#FFD3D5",
-                  background:
-                    `linear-gradient(135deg, ${s.accent} 0%, #FFD3D5 40%, #ffffff 100%)`,
+                  background: `linear-gradient(135deg, ${s.accent} 0%, #FFD3D5 40%, #ffffff 100%)`,
                 }}
               >
                 {/* Accent blob */}
@@ -67,16 +69,28 @@ export default function Collections() {
                   style={{ backgroundColor: "#D8234B" }}
                 />
 
+                {/* Icon / illustration */}
+                <div className="pointer-events-none absolute right-4 flex items-center justify-center opacity-80">
+                  <div className="relative w-24 h-24 md:w-[100px] md:h-[100px]">
+                    <Image
+                      src={s.image}
+                      alt={s.title}
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                </div>
+
                 {/* Content */}
-                <div className="relative p-6 flex flex-col min-h-[200px]">
+                <div className="relative p-6  flex flex-col min-h-[200px]">
                   <div className="flex-1">
                     <h3
-                      className="text-xl font-semibold mb-2 group-hover:translate-y-0.5 transition-transform"
+                      className="text-3xl font-semibold mb-2 group-hover:translate-y-0.5 transition-transform"
                       style={{ color: "#D8234B" }}
                     >
                       {s.title}
                     </h3>
-                    <p className="text-sm" style={{ color: "#5b1c27" }}>
+                    <p className="text-md pt-6" style={{ color: "#5b1c27" }}>
                       {s.description}
                     </p>
                   </div>

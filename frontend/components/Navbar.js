@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 
 import AuthModal from './AuthModal'; // <-- new modal component
+import SearchModal from './SearchModal';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import { useSelector, useDispatch } from "react-redux";
@@ -45,6 +46,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
    const [isLoggingOut, setIsLoggingOut] = useState(false);
     const dispatch = useDispatch();
@@ -155,7 +157,7 @@ export default function Navbar() {
             >
               {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
-            <button aria-label="Search" className="text-gray-800">
+            <button aria-label="Search" className="text-gray-800" onClick={() => setSearchOpen(true)}>
               <Search className="w-6 h-6" />
             </button>
           </div>
@@ -178,7 +180,9 @@ export default function Navbar() {
           
 
             <div className="hidden md:flex items-center gap-3 lg:gap-4 xl:gap-5 text-gray-800 ml-auto">
-              <Search className="w-5 h-5 cursor-pointer hover:text-black" />
+              <button aria-label="Search" onClick={() => setSearchOpen(true)}>
+                <Search className="w-5 h-5 cursor-pointer hover:text-black" />
+              </button>
               <Heart className="w-5 h-5 cursor-pointer hover:text-black" />
               <button
                     aria-label="Cart"
@@ -348,6 +352,8 @@ export default function Navbar() {
 
       {/* AUTH MODAL */}
       <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
+      {/* SEARCH MODAL */}
+      <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );
 }

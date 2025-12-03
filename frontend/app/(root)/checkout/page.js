@@ -192,6 +192,8 @@ export default function Page() {
         if (typeof window !== 'undefined' && currentStep > 1) {
             window.history.pushState({ step: currentStep }, '', window.location.pathname);
         }
+        // Scroll to top when step changes
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }, [currentStep]);
 
     // Handle empty cart rendering
@@ -408,6 +410,7 @@ export default function Page() {
             return;
         }
         setCurrentStep(2);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handleProceedToPayment = async () => {
