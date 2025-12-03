@@ -312,6 +312,16 @@ export default function OrderHistory() {
                                     <p className="text-sm text-gray-600">
                                       Qty: {item.quantity} × ₹{item.price}
                                     </p>
+                                    {Number(item?.mrp_price) > Number(item?.price) && (
+                                      <p className="text-xs text-gray-500 line-through mt-0.5">
+                                        MRP: ₹{Number(item.mrp_price).toFixed(2)}
+                                      </p>
+                                    )}
+                                    {Number(item?.mrp_price) > Number(item?.price) && (
+                                      <p className="text-xs text-green-600 mt-0.5">
+                                        Saved ₹{Math.max(0, Number(item.mrp_price) - Number(item.price)).toFixed(2)} per item
+                                      </p>
+                                    )}
                                     {item.coupon_discount > 0 && (
                                       <p className="text-sm text-green-600">Discount: -₹{item.coupon_discount}</p>
                                     )}
@@ -336,6 +346,16 @@ export default function OrderHistory() {
                                   (sum, item) => sum + Number(item?.sub_total || 0),
                                   0
                                 );
+                                const totalMrp = (order.items || []).reduce(
+                                  (sum, item) => sum + Number(item?.mrp_price || 0) * Number(item?.quantity || 0),
+                                  0
+                                );
+                                const sellingSubtotal = (order.items || []).reduce(
+                                  (sum, item) => sum + Number(item?.price || 0) * Number(item?.quantity || 0),
+                                  0
+                                );
+                                const discountOnMrp = Math.max(0, totalMrp - sellingSubtotal);
+                                const effectiveDiscountPct = totalMrp > 0 ? Math.round((discountOnMrp / totalMrp) * 100) : 0;
                                 const shippingAmount = Number(order?.shipping_amount ?? 0);
                                 const taxAmount = Number(order?.tax_amount ?? 0);
                                 const couponDiscount = Number(order?.coupon_discount ?? 0);
@@ -343,6 +363,24 @@ export default function OrderHistory() {
 
                                 return (
                                   <>
+                                    {totalMrp > 0 && (
+                                      <div className="flex justify-between">
+                                        <span>Total MRP:</span>
+                                        <span>₹{totalMrp.toFixed(2)}</span>
+                                      </div>
+                                    )}
+                                    {discountOnMrp > 0 && (
+                                      <div className="flex justify-between text-green-600">
+                                        <span>Discount on MRP:</span>
+                                        <span>-₹{discountOnMrp.toFixed(2)}</span>
+                                      </div>
+                                    )}
+                                    {discountOnMrp > 0 && (
+                                      <div className="flex justify-between text-xs text-gray-500">
+                                        <span>Effective discount</span>
+                                        <span>{effectiveDiscountPct}%</span>
+                                      </div>
+                                    )}
                                     <div className="flex justify-between">
                                       <span>Items Total:</span>
                                       <span>₹{itemsTotal.toFixed(2)}</span>

@@ -9,7 +9,7 @@ const orderModel = {
             await connection.beginTransaction();
 
             // 1. Generate order number
-            const orderNumber = 'U-ANDI-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+            const orderNumber = 'UNI-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
 
             // 2. Create order
             const [orderResult] = await connection.query(
@@ -17,8 +17,8 @@ const orderModel = {
                     order_number, user_id, address_id, total_amount, 
                     payment_method, payment_status, order_status,
                     coupon_id, coupon_code, coupon_type, coupon_discount,
-                    source_collection_id
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    source_collection_id, shipping_amount
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
                     orderNumber,
                     orderData.user_id,
@@ -31,7 +31,8 @@ const orderModel = {
                     orderData.coupon_code,
                     orderData.coupon_type,
                     orderData.coupon_discount || 0,
-                    orderData.source_collection_id
+                    orderData.source_collection_id,
+                    orderData.shipping_amount
                 ]
             );
 
@@ -74,7 +75,17 @@ const orderModel = {
             );
 
             const [itemRows] = await connection.query(
-                `SELECT * FROM order_items WHERE order_id = ?`,
+                `SELECT 
+                    oi.*, 
+                    p.product_name,
+                    v.variant_name, v.sku, v.weight, v.mrp_price AS mrp_price,
+                    (SELECT image_url FROM product_images 
+                      WHERE variant_id = oi.variant_id 
+                      ORDER BY is_main DESC, image_id ASC LIMIT 1) AS main_image
+                 FROM order_items oi
+                 LEFT JOIN products p ON oi.product_id = p.product_id
+                 LEFT JOIN variants v ON oi.variant_id = v.variant_id
+                 WHERE oi.order_id = ?`,
                 [orderId]
             );
 
@@ -107,7 +118,7 @@ const orderModel = {
             const [itemRows] = await pool.query(
                 `SELECT oi.*, p.product_name, 
                 (SELECT image_url FROM product_images WHERE variant_id = oi.variant_id ORDER BY is_main DESC, image_id ASC LIMIT 1) as main_image,
-                v.variant_name, v.sku, v.weight
+                v.variant_name, v.sku, v.weight, v.mrp_price AS mrp_price
                  FROM order_items oi
                  LEFT JOIN products p ON oi.product_id = p.product_id
                  LEFT JOIN variants v ON oi.variant_id = v.variant_id
@@ -144,7 +155,7 @@ const orderModel = {
             const [itemRows] = await pool.query(
                 `SELECT oi.*, p.product_name, 
                 (SELECT image_url FROM product_images WHERE variant_id = oi.variant_id ORDER BY is_main DESC, image_id ASC LIMIT 1) as main_image,
-                v.variant_name, v.sku, v.weight
+                v.variant_name, v.sku, v.weight, v.mrp_price AS mrp_price
                  FROM order_items oi
                  LEFT JOIN products p ON oi.product_id = p.product_id
                  LEFT JOIN variants v ON oi.variant_id = v.variant_id
@@ -190,7 +201,9 @@ const orderModel = {
                         `SELECT 
                         oi.*,
                         p.product_name,
-                        v.variant_name
+                        v.variant_name,
+                        v.mrp_price AS mrp_price,
+                        (SELECT image_url FROM product_images WHERE variant_id = oi.variant_id ORDER BY is_main DESC, image_id ASC LIMIT 1) as main_image
                      FROM order_items oi
                      LEFT JOIN products p ON oi.product_id = p.product_id
                      LEFT JOIN variants v ON oi.variant_id = v.variant_id

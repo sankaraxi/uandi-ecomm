@@ -75,7 +75,9 @@ export default function Page() {
     const buttonLoading = orderCreating || isPaymentProcessing;
 
     const subtotal = items?.reduce((acc, item) => acc + (item.price || 0) * (item.quantity || 0), 0) || 0;
-    const shipping = 0;
+    const totalQuantity = items?.reduce((acc, item) => acc + (item.quantity || 0), 0) || 0;
+    // Shipping rule: Free delivery on two or more products, else ₹99
+    const shipping = totalQuantity < 2 ? 99 : 0;
     const tax = subtotal * 0;
     const total = Math.max(0, subtotal + shipping + tax - (discount || 0));
 
@@ -472,7 +474,8 @@ export default function Page() {
             coupon_code: appliedCoupon?.coupon_code || null,
             coupon_type: appliedCoupon?.coupon_type || null,
             coupon_discount: discount || 0,
-            source_collection_id: items[0]?.source_collection_id || null
+            source_collection_id: items[0]?.source_collection_id || null,
+            shipping_amount: shipping
         };
 
         const orderItems = items.map(item => ({

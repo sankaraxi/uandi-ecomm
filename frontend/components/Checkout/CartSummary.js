@@ -29,7 +29,10 @@ export default function CartSummary({
     (acc, item) => acc + (item.quantity || 0),
     0
   );
-  const computedShipping = totalQuantity <= 1 ? 99 : 0;
+  // Prefer externally computed shipping from checkout page when provided
+  const computedShipping = (typeof shipping === 'number')
+    ? parseNum(shipping)
+    : (totalQuantity < 2 ? 99 : 0);
 
   const totalSavings = discountOnMrp + discount + (computedShipping === 0 ? 99 : 0);
 
