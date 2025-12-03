@@ -561,7 +561,18 @@ export default function Page() {
                                 confirmButtonColor: '#22c55e'
                             });
 
-                            router.push('/profile/orders');
+                            try {
+                                // Prefer client navigation via next/router, but await to ensure it runs
+                                await router.push('/profile/orders');
+                            } catch (navErr) {
+                                // If client navigation fails (production edge cases), fallback to full redirect
+                                console.warn('router.push failed, falling back to window.location:', navErr);
+                                try {
+                                    window.location.href = '/profile/orders';
+                                } catch (hrefErr) {
+                                    console.error('Fallback navigation also failed:', hrefErr);
+                                }
+                            }
                         }
                     } catch (error) {
                         console.error('Payment verification failed:', error);
