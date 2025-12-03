@@ -38,7 +38,7 @@ export default function Layout({ children }) {
     <>
       <CartInitializer />
       <div
-        className={`${geistSans.variable} ${geistMono.variable} font-sans bg-white text-gray-900`}
+        className={`${geistSans.variable} ${geistMono.variable} font-submain bg-white text-gray-900`}
       >
         <PromoBar />
         <Navbar />

@@ -20,7 +20,7 @@ import {
     MinusIcon,
     PlusIcon,
 } from '@heroicons/react/24/outline';
-import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
+import { HeartIcon as HeartIconSolid, StarIcon } from '@heroicons/react/24/solid';
 import axios from 'axios';
 
 export default function ProductDetailsPage() {
@@ -37,6 +37,7 @@ export default function ProductDetailsPage() {
     const [product, setProduct] = useState(null);
     const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
     const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
+    const [showReviewModal, setShowReviewModal] = useState(false);
 
     // Shiprocket state
     const [pincode, setPincode] = useState('');
@@ -228,10 +229,10 @@ export default function ProductDetailsPage() {
                 </button>
 
                 {/* Grid Layout */}
-                <div className="grid grid-cols-1 lg:grid-cols-[40%_1fr] gap-12 lg:gap-20">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
                     {/* Image Section */}
-                    <div className="space-y-5 rounded-2xl p-5 shadow-sm">
-                        <div className="relative aspect-square rounded-lg overflow-hidden shadow-inner bg-white transition-opacity duration-500">
+                    <div className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+                        <div className="relative aspect-square rounded-2xl overflow-hidden shadow-lg bg-gray-50 transition-all duration-500 border border-gray-100">
                             {mediaItems[selectedMediaIndex].type === 'video' ? (
                                 isYoutubeUrl(mediaItems[selectedMediaIndex].url) ? (
                                     <iframe
@@ -287,7 +288,7 @@ export default function ProductDetailsPage() {
 
                         {/* Thumbnails */}
                         {mediaItems.length > 1 && (
-                            <div className="flex justify-center gap-3">
+                            <div className="flex justify-start gap-3 overflow-x-auto pb-2">
                                 {mediaItems.map((item, idx) => (
                                     <button
                                         key={idx}
@@ -333,7 +334,7 @@ export default function ProductDetailsPage() {
                     </div>
 
                     {/* Product Details Section */}
-                    <div className="flex flex-col justify-center space-y-8">
+                    <div className="flex flex-col space-y-6 lg:space-y-8">
                         <div className="space-y-3">
                             <p className="text-sm font-semibold uppercase tracking-wide text-[#D8234B]">
                                 {product.category?.category_name || 'Uncategorized'}
@@ -343,27 +344,43 @@ export default function ProductDetailsPage() {
                                     {product.tag.tag_name}
                                 </p>
                             )}
-                            <h1 className="text-4xl font-extralight text-gray-900 tracking-tight">
+                            <h1 className="text-3xl md:text-4xl lg:text-5xl font-main font-semibold tracking-wide text-gray-900t leading-tight">
                                 {product.product_name}
                             </h1>
-                            <p className="mt-3 text-gray-700 leading-relaxed whitespace-pre-line">
+                            <p className="mt-4 text-gray-600 leading-relaxed whitespace-pre-line text-sm md:text-base">
                                 {product.description}
                             </p>
                             {averageRating > 0 && (
                                 <div className="mt-4 flex items-center gap-3">
-                                    <div className="flex items-center text-yellow-400 text-xl select-none" aria-label={`Average rating: ${averageRating} out of 5`}>
-                                        {'★'.repeat(Math.round(averageRating))}
-                                        {'☆'.repeat(5 - Math.round(averageRating))}
+                                    <div className="flex items-center gap-1" aria-label={`Average rating: ${averageRating} out of 5`}>
+                                        {[...Array(5)].map((_, index) => (
+                                            <StarIcon 
+                                                key={index}
+                                                className={`w-5 h-5 ${index < Math.round(averageRating) ? 'text-yellow-400' : 'text-gray-300'}`}
+                                            />
+                                        ))}
                                     </div>
                                     <span className="text-sm text-gray-600">{averageRating} / 5 ({reviews?.length || 0} reviews)</span>
                                 </div>
                             )}
                         </div>
 
-                        <div className="flex items-center gap-5">
-                            <span className="text-3xl font-semibold text-gray-900 tracking-tight">
-                                ₹{parseFloat(currentVariant.final_price || currentVariant.price).toFixed(2)}
-                            </span>
+                        <div className="flex items-center gap-4 pt-2">
+                            <div className="flex items-center gap-3">
+                                <span className="text-4xl md:text-5xl font-bold text-gray-900 tracking-tight">
+                                    ₹{parseFloat(currentVariant.final_price || currentVariant.price).toFixed(2)}
+                                </span>
+                                {currentVariant.mrp_price && parseFloat(currentVariant.mrp_price) > parseFloat(currentVariant.final_price || currentVariant.price) && (
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-lg text-gray-500 line-through">
+                                            ₹{parseFloat(currentVariant.mrp_price).toFixed(2)}
+                                        </span>
+                                        <span className="text-sm font-semibold text-green-600 bg-green-50 px-2 py-1 rounded">
+                                            {Math.round(((parseFloat(currentVariant.mrp_price) - parseFloat(currentVariant.final_price || currentVariant.price)) / parseFloat(currentVariant.mrp_price)) * 100)}% OFF
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
                             {isAuthenticated && (
                                 <button
                                     onClick={handleToggleWishlist}
@@ -379,19 +396,19 @@ export default function ProductDetailsPage() {
                             )}
                         </div>
 
-                        <div className="space-y-4">
-                            <label className="block text-sm font-medium text-gray-700">Variants</label>
-                            <div className="flex flex-wrap gap-3">
+                        <div className="space-y-3">
+                            <label className="block text-sm font-semibold text-gray-900 uppercase tracking-wide">Select Variant</label>
+                            <div className="flex flex-wrap gap-2 md:gap-3">
                                 {product.variants.map((variant, idx) => (
                                     <button
                                         key={variant.variant_id}
                                         onClick={() => handleVariantClick(idx)}
                                         disabled={variant.stock === 0}
-                                        className={`px-5 py-3 rounded-lg border text-sm font-medium transition duration-300 ${
+                                        className={`px-4 md:px-5 py-2.5 md:py-3 rounded-lg border text-sm font-medium transition-all duration-300 transform hover:scale-105 ${
                                             selectedVariantIndex === idx
-                                                ? 'bg-[#D8234B] text-white border-[#D8234B] shadow-lg'
+                                                ? 'bg-[#D8234B] text-white border-[#D8234B] shadow-lg scale-105'
                                                 : variant.stock === 0
-                                                ? 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
+                                                ? 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed hover:scale-100'
                                                 : 'bg-white text-gray-700 border-gray-300 hover:border-[#D8234B] hover:bg-red-50'
                                         }`}
                                     >
@@ -402,68 +419,57 @@ export default function ProductDetailsPage() {
                         </div>
 
                         {currentVariant.stock > 0 && currentVariant.stock < 10 && (
-                            <p className="text-sm text-amber-600 font-medium">
-                                Only {currentVariant.stock} left in stock
-                            </p>
+                            <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2">
+                                <p className="text-sm text-amber-700 font-medium">
+                                    Only {currentVariant.stock} left in stock
+                                </p>
+                            </div>
                         )}
                         {currentVariant.stock === 0 && (
-                            <p className="text-sm text-red-600 font-semibold">Out of stock</p>
+                            <div className="inline-flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-4 py-2">
+                                <p className="text-sm text-red-600 font-semibold">Out of stock</p>
+                            </div>
                         )}
 
                         {cartItem ? (
-                            <div className="flex items-center gap-4 w-full max-w-md">
-                                <div className="flex items-center border border-gray-300 rounded-xl overflow-hidden w-full shadow-sm">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full">
+                                <div className="flex items-center border-2 border-gray-300 rounded-lg overflow-hidden w-32 bg-white shadow-sm">
                                     <button
                                         onClick={handleDecreaseQuantity}
-                                        className="px-5 py-4 bg-gray-50 hover:bg-gray-100 transition-colors border-r border-gray-300"
+                                        className="px-3 py-2.5 bg-gray-50 hover:bg-gray-100 transition-colors border-r border-gray-300"
                                         aria-label="Decrease quantity"
                                     >
-                                        <MinusIcon className="w-6 h-6 text-gray-700" />
+                                        <MinusIcon className="w-4 h-4 text-gray-700" />
                                     </button>
-                                    <div className="flex-1 text-center font-semibold text-gray-900 select-none">
+                                    <div className="flex-1 text-center font-semibold text-gray-900 select-none text-sm">
                                         {cartItem.quantity}
                                     </div>
                                     <button
                                         onClick={handleIncreaseQuantity}
                                         disabled={cartItem.quantity >= currentVariant.stock}
-                                        className="px-5 py-4 bg-gray-50 hover:bg-gray-100 transition-colors border-l border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="px-3 py-2.5 bg-gray-50 hover:bg-gray-100 transition-colors border-l border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
                                         aria-label="Increase quantity"
                                     >
-                                        <PlusIcon className="w-6 h-6 text-gray-700" />
+                                        <PlusIcon className="w-4 h-4 text-gray-700" />
                                     </button>
                                 </div>
                                 <button
                                     onClick={() => dispatch(openCart())}
-                                    className="px-8 py-4 bg-[#D8234B] text-white rounded-xl hover:bg-[#b21c3f] transition-colors whitespace-nowrap shadow-md"
+                                    className="flex-1 px-6 py-3 bg-[#D8234B] text-white rounded-xl hover:bg-[#b21c3f] transition-all transform hover:scale-105 whitespace-nowrap shadow-lg font-semibold"
                                 >
                                     Go to Cart
                                 </button>
                             </div>
                         ) : (
-                            <div className="flex items-center gap-4 w-full max-w-md">
-                                <button
-                                    onClick={handleAddToCart}
-                                    disabled={currentVariant.stock === 0}
-                                    className="flex-1 bg-[#D8234B] hover:bg-[#b21c3f] text-white font-semibold py-4 rounded-xl flex items-center justify-center gap-3 transition duration-300 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed shadow-md"
-                                    aria-disabled={currentVariant.stock === 0}
-                                >
-                                    <ShoppingCartIcon className="w-5 h-5" />
-                                    {currentVariant.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
-                                </button>
-                                {isAuthenticated && (
-                                    <button
-                                        onClick={handleToggleWishlist}
-                                        className="px-5 py-4 border border-gray-300 rounded-xl hover:border-[#D8234B] hover:bg-red-50 transition-colors"
-                                        aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
-                                    >
-                                        {isInWishlist ? (
-                                            <HeartIconSolid className="w-6 h-6 text-red-500" />
-                                        ) : (
-                                            <HeartIcon className="w-6 h-6 text-gray-700" />
-                                        )}
-                                    </button>
-                                )}
-                            </div>
+                            <button
+                                onClick={handleAddToCart}
+                                disabled={currentVariant.stock === 0}
+                                className="w-full bg-[#D8234B] hover:bg-[#b21c3f] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-3 transition-all transform hover:scale-105 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg"
+                                aria-disabled={currentVariant.stock === 0}
+                            >
+                                <ShoppingCartIcon className="w-5 h-5" />
+                                {currentVariant.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                            </button>
                         )}
 
                         {/* Shiprocket Delivery */}
@@ -596,22 +602,41 @@ export default function ProductDetailsPage() {
                 </div>
 
                 {/* Reviews Section */}
-                <div className="mt-16 border-t border-gray-200 pt-12 max-w-6xl mx-auto">
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl font-light tracking-tight text-gray-900">Customer Reviews</h2>
+                <div className="mt-16 border-t-2 border-gray-200 pt-12">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                        <div>
+                            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Customer Reviews</h2>
+                            <p className="text-sm text-gray-500">Real experiences from real customers</p>
+                        </div>
                         {isAuthenticated && (
-                            <a href="#write-review" className="text-sm text-[#D8234B] underline hover:text-[#b21c3f]">Write a review</a>
+                            <button 
+                                onClick={() => setShowReviewModal(true)} 
+                                className="inline-flex items-center gap-2 px-5 py-3 bg-[#D8234B] text-white font-semibold rounded-lg hover:bg-[#b21c3f] transition-all shadow-md hover:shadow-lg transform hover:scale-105 whitespace-nowrap"
+                            >
+                                Write a Review
+                            </button>
                         )}
                     </div>
-                    {reviewsStatus === 'idle' && <p className="text-sm text-gray-500">Loading reviews...</p>}
+                    {reviewsStatus === 'idle' && <p className="text-sm text-gray-500 animate-pulse">Loading reviews...</p>}
                     <ReviewList reviews={reviews} />
-                    {isAuthenticated && user && (
-                        <div id="write-review" className="mt-10">
-                            <h3 className="text-lg font-medium mb-4 text-gray-900">Share Your Experience</h3>
-                            <ReviewForm productId={product.product_id} token={null} userId={user.user_id} />
-                        </div>
-                    )}
                 </div>
+
+                {/* Review Modal */}
+                {isAuthenticated && user && showReviewModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowReviewModal(false)}>
+                        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+                        <div className="relative z-10 w-full max-w-2xl" onClick={(e) => e.stopPropagation()}>
+                            <div className="bg-white rounded-2xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
+                                <ReviewForm 
+                                    productId={product.product_id} 
+                                    token={null} 
+                                    userId={user.user_id} 
+                                    onClose={() => setShowReviewModal(false)} 
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

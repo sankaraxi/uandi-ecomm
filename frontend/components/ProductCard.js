@@ -168,28 +168,28 @@ export default function ProductCard({
         <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">
           {product.category?.category_name || 'Uncategorized'}
         </p>
-        <h3 className="font-medium text-gray-900 line-clamp-2 mb-2 group-hover:text-gray-700 transition-colors">
+        <h3 className="font-medium text-gray-900 line-clamp-2 mb-3 group-hover:text-gray-700 transition-colors">
           {product.product_name}
         </h3>
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-baseline gap-2">
-            {showMrp && (
-              <span className="text-sm text-gray-400 line-through">
-                ₹{parseFloat(lowestVariant.mrp_price).toFixed(2)}
-              </span>
-            )}
-            <span className="text-xl font-light text-gray-900">
+        <div className="space-y-1.5 mb-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xl font-semibold text-gray-900">
               {lowestPrice !== null ? `₹${lowestPrice.toFixed(2)}` : 'Not available'}
             </span>
+            {showMrp && (
+              <>
+                <span className="text-sm text-gray-400 line-through">
+                  ₹{parseFloat(lowestVariant.mrp_price).toFixed(2)}
+                </span>
+                <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded">
+                  {Math.round(((parseFloat(lowestVariant.mrp_price) - parseFloat(lowestVariant.final_price || lowestVariant.price)) / parseFloat(lowestVariant.mrp_price)) * 100)}% OFF
+                </span>
+              </>
+            )}
           </div>
-          {/* {pricedVariants.length > 1 && (
-            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-              {pricedVariants.length} Variants
-            </span>
-          )} */}
         </div>
         <button
-          className={`w-full py-3 cursor-pointer px-4 text-sm font-medium rounded-xl transition-all duration-200 ${isAddDisabled ? 'opacity-60 cursor-not-allowed' : 'hover:shadow-md'}`}
+          className={`w-full py-2.5 sm:py-3 px-3 sm:px-4 text-xs sm:text-sm font-medium rounded-lg sm:rounded-xl transition-all duration-200 ${isAddDisabled ? 'opacity-60 cursor-not-allowed' : 'hover:shadow-md active:scale-95'}`}
           style={isAddDisabled ? { backgroundColor: '#f3f4f6', color: '#6b7280' } : { backgroundImage: 'linear-gradient(to right, #D8234B, #FFD3D5)', color: '#ffffff' }}
           disabled={isAddDisabled}
           onClick={handleAddToCart}

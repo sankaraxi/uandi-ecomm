@@ -44,10 +44,10 @@ export default function Collections() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-14">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 mb-4 tracking-tight">
+          <h2 className="text-4xl md:text-5xl font-main lg:text-6xl font-bold text-gray-800 mb-4 ">
             Explore Our Collections
           </h2>
-          <p className="text-lg text-gray-400 max-w-xl mx-auto">
+          <p className="text-lg text-gray-600 max-w-xl mx-auto">
             Discover curated skincare ranges designed for every age and concern.
           </p>
         </div>

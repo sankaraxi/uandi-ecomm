@@ -9,7 +9,7 @@ export default function Home() {
 
   
   return (
-    <div>
+    <div className="">
       {/* Section 1 */}
       <PromotionalBanners />
 

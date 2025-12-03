@@ -87,16 +87,16 @@ export default function HomePageProducts() {
   }
 
   return (
-    <section className="mt-8 mx-1 md:mx-7 py-8">
-      <div className="text-center mb-14">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 mb-4 tracking-tight">
+    <section className="mt-8 px-4 sm:px-6 md:px-8 lg:px-12 py-8">
+      <div className="text-center mb-10 md:mb-14">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-main font-bold text-gray-800 mb-3 md:mb-4">
             Just For You
           </h2>
-          <p className="text-lg text-gray-400 max-w-xl mx-auto">
+          <p className="text-base sm:text-lg text-gray-600 max-w-xl mx-auto px-4">
             Handpicked products to elevate your skincare routine.
           </p>
         </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
         {randomFour.map((product) => {
           const isInWishlist = wishlistItems?.some(
             (item) => item.product_id === product.product_id
@@ -132,11 +132,11 @@ export default function HomePageProducts() {
       </div>
 
       <div>
-        <div className="mt-10 text-center">
+        <div className="mt-8 md:mt-10 text-center">
           <a
             href="/products"
             aria-label="Browse all products"
-            className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-[#D8234B] font-semibold text-white transition-transform focus:outline-none focus:ring-4"
+            className="inline-flex items-center gap-2 sm:gap-3 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full bg-[#D8234B] font-semibold text-sm sm:text-base text-white transition-transform focus:outline-none focus:ring-4 hover:bg-[#b21c3f]"
             
             onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
             onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}

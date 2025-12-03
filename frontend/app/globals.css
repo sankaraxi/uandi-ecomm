@@ -1,9 +1,21 @@
 @import "tailwindcss";
 
+
+@theme inline {
+  --font-main: var(--font-mainFont); /* 👈 your local font */
+  --font-submain: var(--font-dm-sans);
+}
+
+body {
+  font-family: var(--font-submain), sans-serif;
+}
+
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
 
 @keyframes slideUp {
   from { transform: translateY(20px); opacity: 0; }
@@ -77,8 +89,7 @@ html {
 }
 
 body {
-  font-family: 'Inter', sans-serif;
-  background-color: #fdf2f7;
+  /* background-color: #fdf2f7; */
 }
 
 .btn-primary {

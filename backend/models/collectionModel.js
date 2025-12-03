@@ -92,6 +92,7 @@ const collectionModel = {
                      v.variant_name,
                      v.price AS variant_price,
                      v.final_price,
+                     v.mrp_price,
                      v.stock
                  FROM collection_products cp
                      INNER JOIN products p ON cp.product_id = p.product_id
@@ -117,6 +118,7 @@ const collectionModel = {
                     variant_name,
                     variant_price,
                     final_price,
+                    mrp_price,
                     stock
                 } = row;
 
@@ -140,6 +142,7 @@ const collectionModel = {
                         variant_name,
                         price: variant_price,
                         final_price,
+                        mrp_price,
                         stock,
                         images: [] // will be filled later
                     });
