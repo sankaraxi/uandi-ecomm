@@ -85,7 +85,7 @@ export default function Collections() {
                 <div className="relative p-6  flex flex-col min-h-[200px]">
                   <div className="flex-1">
                     <h3
-                      className="text-3xl font-semibold mb-2 group-hover:translate-y-0.5 transition-transform"
+                      className="text-3xl  tracking-wide font-main font-semibold mb-2 group-hover:translate-y-0.5 transition-transform"
                       style={{ color: "#D8234B" }}
                     >
                       {s.title}
