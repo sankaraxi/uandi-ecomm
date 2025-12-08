@@ -3,10 +3,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
 const banners = [
-  { id: 1, image: "https://pub-25688779f5b34d7a87524a48c1772ab6.r2.dev/Untitled-1%20-%2027-11-2025%2014-40-15.webp", link: "/products" },
-  { id: 2, image: "https://pub-25688779f5b34d7a87524a48c1772ab6.r2.dev/Untitled-1%20-%2027-11-2025%2015-08-57.webp", link: "/products/17" },
-  { id: 3, image: "https://pub-25688779f5b34d7a87524a48c1772ab6.r2.dev/Untitled-1%20-%2027-11-2025%2015-30-41%20(1).webp", link: "/products/18" },
-  { id: 4, image: "https://pub-25688779f5b34d7a87524a48c1772ab6.r2.dev/Untitled-1%20-%2027-11-2025%2014-40-15.webp", link: "/products" },
+  { id: 1, image: "https://pub-25688779f5b34d7a87524a48c1772ab6.r2.dev/banner-1.webp", link: "/products" },
+  { id: 2, image: "https://pub-25688779f5b34d7a87524a48c1772ab6.r2.dev/banner-2.webp", link: "/products/16" },
+  { id: 3, image: "https://pub-25688779f5b34d7a87524a48c1772ab6.r2.dev/banner-3.webp", link: "/products/17" },
+  { id: 4, image: "https://pub-25688779f5b34d7a87524a48c1772ab6.r2.dev/banner-4.webp", link: "/products/22" },
 ];
 
 export default function PromotionalBanners() {

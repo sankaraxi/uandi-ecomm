@@ -102,6 +102,37 @@ export default function ProductDetailsPage() {
         return pool.slice(0, 4);
     }, [products, product]);
 
+    const handleSuggestionAddToCart = ({ product: p, variant }) => {
+        if (!p || !variant) return;
+        const cartItem = {
+            product_id: p.product_id,
+            product_name: p.product_name,
+            variant_id: variant.variant_id,
+            variant_name: variant.variant_name,
+            price: parseFloat(variant.final_price || variant.price),
+            quantity: 1,
+            main_image: p.main_image,
+        };
+        dispatch(addToCart(cartItem));
+        dispatch(openCart());
+    };
+
+    const handleSuggestionToggleWishlist = (prodId) => {
+        if (!isAuthenticated) return;
+        const p = products.find(x => x.product_id === prodId);
+        const variantId = p?.variants?.[0]?.variant_id;
+        const exists = wishlistItems.some(i => i.product_id === prodId && i.variant_id === variantId);
+        if (exists) {
+            dispatch(removeFromWishlist({ product_id: prodId, variant_id: variantId }));
+        } else {
+            dispatch(addToWishlist({ product_id: prodId, variant_id: variantId }));
+        }
+    };
+
+    const handleSuggestionNavigate = (id) => {
+        router.push(`/products/${id}`);
+    };
+
     const isYoutubeUrl = (url) => /youtube\.com|youtu\.be/.test(url || '');
 
     if (loading || !product) {
@@ -640,7 +671,15 @@ export default function ProductDetailsPage() {
                         <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">You may also like</h3>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                             {suggestions.map((s) => (
-                                <ProductCard key={s.product_id} product={s} />
+                                <ProductCard
+                                    key={s.product_id}
+                                    product={s}
+                                    isAuthenticated={isAuthenticated}
+                                    inWishlist={wishlistItems.some(i => i.product_id === s.product_id && i.variant_id === s.variants?.[0]?.variant_id)}
+                                    onToggleWishlist={() => handleSuggestionToggleWishlist(s.product_id)}
+                                    onAddToCart={handleSuggestionAddToCart}
+                                    onNavigate={handleSuggestionNavigate}
+                                />
                             ))}
                         </div>
                     </div>
