@@ -224,12 +224,14 @@ function buildOrderHtml({ order, customer, address, items, summary }) {
 async function sendOrderEmails({ order, customer, address, items, summary }) {
   const transporter = createTransport();
   const from = `"U&I Naturals" <${process.env.ZOHO_SMTP_USER || 'info@uandinaturals.com'}>`;
+  const replyTo = process.env.REPLY_TO_EMAIL || 'admin@uandinaturals.com';
   const adminEmail = process.env.ADMIN_EMAIL || 'info@uandinaturals.com';
   const subject = `U&I Order Confirmation - #${order.order_number || order.order_id || ''}`;
   const html = buildOrderHtml({ order, customer, address, items, summary });
 
   const message = {
     from,
+    replyTo,
     to: customer?.email || adminEmail,
     bcc: adminEmail,
     subject,
