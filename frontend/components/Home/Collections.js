@@ -32,7 +32,7 @@ const sections = [
     key: "treatment",
     title: "Treatment",
     description: "Clinical-grade treatments curated for immediate results .",
-    href: "/collections/treatment",
+    href: "/collections/5",
     image: "/images/treatment.png",
     accent: "#FFA3A9",
   },
